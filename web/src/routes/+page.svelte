@@ -30,6 +30,7 @@
     import QueryList from "$lib/components/QueryList.svelte";
     import Login from "$lib/components/Login.svelte";
     import Inspector from "$lib/components/Inspector.svelte";
+    import { scrub } from "$lib/scrub.svelte";
     import Resizer from "$lib/components/Resizer.svelte";
     import ResultGrid from "$lib/components/ResultGrid.svelte";
     import SearchPanel from "$lib/components/SearchPanel.svelte";
@@ -136,7 +137,9 @@
         if (e.key === "Escape") {
             zoom = null;
             showExportModal = false;
-
+        } else if (scrub.active) {
+            // clip 5s đang mở: ← → thuộc về thanh tua frame, Space là phát/dừng
+            return;
         } else if (zoom) {
             if (e.key === "ArrowLeft") {
                 e.preventDefault();

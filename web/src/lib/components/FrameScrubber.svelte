@@ -8,6 +8,7 @@
 		Target02Icon
 	} from '@hugeicons/core-free-icons';
 	import { clipUrl } from '$lib/api';
+	import { scrub } from '$lib/scrub.svelte';
 
 	/**
 	 * Clip 5s quanh một frame, kèm BỘ ĐẾM FRAME và timeline có vạch chia.
@@ -100,7 +101,32 @@
 		el?.pause();
 		seekTo(loF + (span * (e.clientX - r.left)) / r.width);
 	}
+
+	// Giành quyền dùng phím mũi tên chừng nào clip còn mở.
+	$effect(() => {
+		scrub.active = true;
+		return () => {
+			scrub.active = false;
+		};
+	});
+
+	function onKey(e: KeyboardEvent) {
+		const tag = (e.target as HTMLElement | null)?.tagName;
+		if (tag === 'INPUT' || tag === 'TEXTAREA') return; // đang gõ số frame
+		if (e.key === 'ArrowLeft') {
+			e.preventDefault();
+			step(e.shiftKey ? -10 : -1);
+		} else if (e.key === 'ArrowRight') {
+			e.preventDefault();
+			step(e.shiftKey ? 10 : 1);
+		} else if (e.key === ' ') {
+			e.preventDefault();
+			toggle();
+		}
+	}
 </script>
+
+<svelte:window onkeydown={onKey} />
 
 <div class="space-y-2">
 	<div class="relative overflow-hidden rounded-lg bg-ink-900">
@@ -216,6 +242,6 @@
 
 	<p class="text-[11px] text-ink-500">
 		Clip từ giây {startSec.toFixed(2)} · {fps}fps · {seconds}s = {hiF - loF + 1} frame.
-		Kéo trên timeline, hoặc dùng nút lùi/tới để đi từng frame.
+		<kbd>←</kbd> <kbd>→</kbd> đi 1 frame · <kbd>Shift</kbd>+mũi tên đi 10 · <kbd>Space</kbd> phát/dừng.
 	</p>
 </div>

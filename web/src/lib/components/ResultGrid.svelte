@@ -7,6 +7,7 @@
     } from "@hugeicons/core-free-icons";
     import { fetchThumbs, imageUrl } from "$lib/api";
     import { ws } from "$lib/store.svelte";
+    import { scrub } from "$lib/scrub.svelte";
 	import { queuedImage } from '$lib/imgqueue';
     import type { Candidate, Query } from "$lib/types";
 
@@ -70,6 +71,7 @@
     function onKey(e: KeyboardEvent) {
         const tag = (e.target as HTMLElement)?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA") return;
+        if (scrub.active) return; // clip 5s đang mở, mũi tên để đi từng frame
         const n = shown.length;
         if (!n) return;
         const move = {
