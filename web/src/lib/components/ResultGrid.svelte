@@ -155,7 +155,7 @@
         <div
             class="grid gap-3"
             style="grid-template-columns: repeat({cols}, minmax(0, 1fr))">
-            {#each query.candidates as c, i (c.video_id + "-" + c.frame_id)}
+            {#each query.candidates as c, i (`${i}-${c.video_id}-${c.frame_id}`)}
                 {@const rank = rankOf(c)}
                 <div
                     data-tile
