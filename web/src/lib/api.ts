@@ -80,8 +80,18 @@ export function imageUrl(video_id: string, keyframe_n: number, w = 512): string 
 	return `${getBase()}/image?video_id=${video_id}&n=${keyframe_n}&w=${w}&key=${encodeURIComponent(getKey())}`;
 }
 
+/**
+ * Đổi số này mỗi khi cách CẮT clip ở backend thay đổi.
+ *
+ * `/clip` không gửi Cache-Control, chỉ có Last-Modified, nên trình duyệt tự suy ra
+ * độ tươi và phát lại mp4 đã tải từ trước — URL cũ và mới giống hệt nhau. Bản v1 vừa
+ * lệch 1 frame (mốc tính qua pts_time làm tròn) vừa mất tiếng (`-an`), và người dùng
+ * vẫn thấy đúng hai lỗi đó sau khi backend đã sửa xong.
+ */
+const CLIP_V = 2;
+
 export function clipUrl(video_id: string, frame_id: number, seconds = 5): string {
-	return `${getBase()}/clip?video_id=${video_id}&frame_id=${frame_id}&seconds=${seconds}&key=${encodeURIComponent(getKey())}`;
+	return `${getBase()}/clip?video_id=${video_id}&frame_id=${frame_id}&seconds=${seconds}&v=${CLIP_V}&key=${encodeURIComponent(getKey())}`;
 }
 
 
