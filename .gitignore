@@ -1,0 +1,36 @@
+# Python & Notebook
+__pycache__/
+*.py[cod]
+*.ipynb_checkpoints/
+.venv/
+env/
+venv/
+
+# Data & Artifacts
+*.bin
+*.pkl
+*.faiss
+*.npy
+*.zip
+*.tar.gz
+artifacts/
+database/
+submission/
+data/
+
+# Scratch & Logs
+.scratch/
+*.log
+.DS_Store
+
+# Web build & dependencies
+node_modules/
+.svelte-kit/
+build/
+dist/
+.vite/
+
+# Env & Secrets
+.env
+.env.*
+!.env.example
