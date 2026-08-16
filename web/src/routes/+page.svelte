@@ -29,6 +29,7 @@
     import AnswerList from "$lib/components/AnswerList.svelte";
     import QueryList from "$lib/components/QueryList.svelte";
     import Login from "$lib/components/Login.svelte";
+    import Inspector from "$lib/components/Inspector.svelte";
     import Resizer from "$lib/components/Resizer.svelte";
     import ResultGrid from "$lib/components/ResultGrid.svelte";
     import SearchPanel from "$lib/components/SearchPanel.svelte";
@@ -41,7 +42,7 @@
     let key = $state("");
     let authKey = $state("");
     let showExportModal = $state(false);
-    let zoom = $state<Candidate | null>(null);
+    let zoom = $state<Candidate[] | null>(null);
     let showClip = $state(false);
 
     onMount(async () => {
@@ -107,16 +108,16 @@
 
     // Lightbox navigation
     let zoomIndex = $derived.by(() => {
-        if (!zoom || !ws.active) return -1;
+        if (!zoom?.[0] || !ws.active) return -1;
         return ws.active.candidates.findIndex(
             (c) =>
-                c.video_id === zoom?.video_id && c.frame_id === zoom?.frame_id,
+                c.video_id === zoom?.[0]?.video_id && c.frame_id === zoom?.[0]?.frame_id,
         );
     });
 
     function prevCandidate() {
         if (!ws.active || zoomIndex <= 0) return;
-        zoom = ws.active.candidates[zoomIndex - 1];
+        zoom = [ws.active.candidates[zoomIndex - 1]];
         showClip = false;
     }
 
@@ -127,7 +128,7 @@
             zoomIndex >= ws.active.candidates.length - 1
         )
             return;
-        zoom = ws.active.candidates[zoomIndex + 1];
+        zoom = [ws.active.candidates[zoomIndex + 1]];
         showClip = false;
     }
 
@@ -135,6 +136,7 @@
         if (e.key === "Escape") {
             zoom = null;
             showExportModal = false;
+
         } else if (zoom) {
             if (e.key === "ArrowLeft") {
                 e.preventDefault();
@@ -152,7 +154,7 @@
                     )
                 ) {
                     e.preventDefault();
-                    ws.toggleAnswer(ws.active, zoom);
+                    ws.toggleAnswer(ws.active, zoom[0]);
                 }
             }
         }
@@ -315,7 +317,7 @@
                     <SearchPanel query={ws.active} />
                     <ResultGrid
                         query={ws.active}
-                        onzoom={(c) => ((zoom = c), (showClip = false))} />
+                        onzoom={(g) => (zoom = g)} />
                 {:else}
                     <div
                         class="flex flex-1 flex-col items-center justify-center p-8 text-center">
@@ -469,188 +471,14 @@
     <!-- 4. Lightbox Candidate Inspector (Zoom Modal) -->
 {/if}
 
-{#if zoom}
-    {@const isPicked = ws.active ? ws.isPicked(ws.active, zoom) : false}
-    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-md"
-        onclick={() => (zoom = null)}>
-        <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-        <div
-            class="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-800 bg-[#161616] shadow-2xl"
-            onclick={(e) => e.stopPropagation()}>
-            <!-- lightbox header -->
-            <div
-                class="flex items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 py-2.5">
-                <div class="flex items-center gap-2">
-                    <span
-                        class="rounded bg-indigo-500/20 px-2 py-0.5 font-mono text-xs font-bold text-indigo-400">
-                        #{zoom.rank}
-                    </span>
-                    <span
-                        class="font-mono text-xs font-semibold text-slate-200">
-                        {zoom.video_id}
-                    </span>
-                    <span class="text-xs text-slate-500">
-                        (frame: {zoom.frame_id} · {zoom.pts_time.toFixed(1)}s)
-                    </span>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    {#if ws.active}
-                        <button
-                            class="cursor-pointer btn py-1 text-xs font-bold {isPicked
-                                ? 'bg-rose-600 text-white hover:bg-rose-500'
-                                : 'bg-emerald-600 text-white hover:bg-emerald-500'}"
-                            onclick={() =>
-                                ws.active &&
-                                zoom &&
-                                ws.toggleAnswer(ws.active, zoom)}>
-                            {isPicked ? "Bỏ chọn" : "+ Chọn nộp"}
-                        </button>
-                    {/if}
-
-                    <button
-                        class="cursor-pointer btn-secondary py-1 text-xs"
-                        onclick={() => (showClip = !showClip)}>
-                        {showClip ? "Xem ảnh tĩnh" : "Xem clip 5s"}
-                    </button>
-
-                    <button
-                        class="cursor-pointer btn-ghost size-7 p-0"
-                        onclick={() => (zoom = null)}>
-                        <HugeiconsIcon
-                            icon={Cancel01Icon}
-                            size={13}
-                            strokeWidth={1.9} />
-                    </button>
-                </div>
-            </div>
-
-            <!-- media body with navigation buttons -->
-            <div
-                class="relative flex flex-1 items-center justify-center overflow-hidden bg-slate-950">
-                <!-- prev button -->
-                {#if zoomIndex > 0}
-                    <button
-                        class="cursor-pointer absolute top-1/2 left-3 z-10 -translate-y-1/2 rounded-full bg-slate-900/80 p-2 text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-110 hover:bg-slate-800"
-                        onclick={prevCandidate}
-                        title="Xem kết quả trước ()">
-                        <svg
-                            class="size-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="15 18 9 12 15 6"></polyline>
-                        </svg>
-                    </button>
-                {/if}
-
-                <!-- media content -->
-                <div
-                    class="flex max-h-[55vh] w-full items-center justify-center p-2">
-                    {#if showClip}
-                        <!-- svelte-ignore a11y_media_has_caption -->
-                        <video
-                            src={clipUrl(zoom.video_id, zoom.frame_id)}
-                            controls
-                            autoplay
-                            class="max-h-[52vh] max-w-full rounded-lg shadow-xl">
-                        </video>
-                    {:else}
-                        <img
-                            src={imageUrl(zoom.video_id, zoom.keyframe_n, 1280)}
-                            alt=""
-                            class="max-h-[52vh] max-w-full rounded-lg object-contain shadow-xl" />
-                    {/if}
-                </div>
-
-                <!-- next button -->
-                {#if ws.active && zoomIndex < ws.active.candidates.length - 1}
-                    <button
-                        class="cursor-pointer absolute top-1/2 right-3 z-10 -translate-y-1/2 rounded-full bg-slate-900/80 p-2 text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-110 hover:bg-slate-800"
-                        onclick={nextCandidate}
-                        title="Xem kết quả tiếp theo ()">
-                        <svg
-                            class="size-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </button>
-                {/if}
-            </div>
-
-            <!-- metadata details inspector -->
-            <div
-                class="max-h-48 space-y-2 overflow-y-auto border-t border-slate-800 bg-[#111111] p-3 text-xs">
-                <!-- score parts -->
-                {#if zoom.parts}
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span
-                            class="text-[10px] font-bold text-slate-500 uppercase">
-                            Điểm thành phần:
-                        </span>
-                        {#each Object.entries(zoom.parts) as [k, v]}
-                            <span
-                                class="rounded bg-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-300">
-                                {k
-                                    .replace("faiss_", "F.")
-                                    .replace("bm25_", "B.")}:
-                                <strong class="text-indigo-400">
-                                    {v.toFixed(3)}
-                                </strong>
-                            </span>
-                        {/each}
-                    </div>
-                {/if}
-
-                <!-- text cues -->
-                <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
-                    {#if zoom.caption}
-                        <div
-                            class="rounded-lg border border-slate-800/80 bg-slate-900/60 p-2">
-                            <span
-                                class="text-[10px] font-bold text-indigo-400 uppercase">
-                                Caption
-                            </span>
-                            <p
-                                class="mt-0.5 text-[11px] leading-relaxed text-slate-300">
-                                {zoom.caption}
-                            </p>
-                        </div>
-                    {/if}
-                    {#if zoom.speech}
-                        <div
-                            class="rounded-lg border border-slate-800/80 bg-slate-900/60 p-2">
-                            <span
-                                class="text-[10px] font-bold text-emerald-400 uppercase">
-                                Speech
-                            </span>
-                            <p
-                                class="mt-0.5 text-[11px] leading-relaxed text-slate-300">
-                                {zoom.speech}
-                            </p>
-                        </div>
-                    {/if}
-                    {#if zoom.ocr}
-                        <div
-                            class="rounded-lg border border-slate-800/80 bg-slate-900/60 p-2">
-                            <span
-                                class="text-[10px] font-bold text-amber-400 uppercase">
-                                OCR
-                            </span>
-                            <p
-                                class="mt-0.5 text-[11px] leading-relaxed text-slate-300">
-                                {zoom.ocr}
-                            </p>
-                        </div>
-                    {/if}
-                </div>
-            </div>
-        </div>
-    </div>
+{#if zoom && ws.active}
+	<Inspector
+		query={ws.active}
+		items={zoom}
+		onclose={() => (zoom = null)}
+		onpick={(frames: number[]) => {
+			if (ws.active && zoom) ws.addAnswerFrames(ws.active, zoom, frames);
+			zoom = null;
+		}}
+	/>
 {/if}

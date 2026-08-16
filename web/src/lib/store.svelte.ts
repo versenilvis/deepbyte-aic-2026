@@ -9,7 +9,7 @@ function emptyQuery(id: string, task: Task): Query {
 		task,
 		brief: '',
 		prompt: { spatial_context: ['', ''], asr_text: [''], ocr_text: [''] },
-		n_events: task === 'trake' ? 4 : undefined,
+		n_events: undefined,
 		weights: { visual: 1, speech: 1, ocr: 1 },
 		answers: [],
 		candidates: []
@@ -101,6 +101,20 @@ class Workspace {
 	}
 
 	// ---------------------------------------------------------------- answers
+    /**
+     * Thêm đáp án từ Inspector với frame ĐÃ CHỈNH trong khoảng clip 5s.
+     * TRAKE: `group` = n candidate cùng nhóm, `frames` = n frame theo thứ tự action.
+     */
+    addAnswerFrames(q: Query, group: Candidate[], frames: number[]) {
+        if (q.answers.length >= MAX_ANSWERS) {
+            this.error = `Đã đủ ${MAX_ANSWERS} đáp án.`;
+            return;
+        }
+        const refs = group.map((c, i) => ({ ...toRef(c), frame_id: frames[i] ?? c.frame_id }));
+        q.answers.push({ id: crypto.randomUUID(), frames: refs });
+        this.save();
+    }
+
 	addAnswer(q: Query, c: Candidate) {
 		if (q.answers.length >= MAX_ANSWERS) {
 			this.error = `Đã đủ ${MAX_ANSWERS} đáp án, không nộp thêm được`;
@@ -180,7 +194,7 @@ class Workspace {
 }
 
 function toRef(c: Candidate): FrameRef {
-	return { video_id: c.video_id, frame_id: c.frame_id, keyframe_n: c.keyframe_n, pts_time: c.pts_time };
+	return { video_id: c.video_id, frame_id: c.frame_id, keyframe_n: c.keyframe_n, pts_time: c.pts_time, fps: c.fps };
 }
 
 export const ws = new Workspace();

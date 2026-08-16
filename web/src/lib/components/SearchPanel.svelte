@@ -43,6 +43,9 @@
 				rawPrompt: manual ? undefined : query.brief
 			});
 			query.candidates = out.results;
+			// Số events do LLM tách ra, không bắt người dùng đoán.
+			const n = (out.parsed as any)?.actions?.length;
+			if (query.task === "trake" && n > 1) query.n_events = n;
 			parsed = out.parsed;
 			if (!manual && parsed) {
 				query.prompt = {
@@ -99,18 +102,13 @@
 
 	<!-- toolbar options -->
 	<div class="mt-3 flex flex-wrap items-center gap-3 text-xs">
-		{#if query.task === 'trake'}
-			<div class="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/80 px-2 py-1">
-				<span class="text-[11px] font-semibold text-rose-400">Events</span>
-				<input
-					type="number"
-					min="2"
-					max="12"
-					class="w-10 rounded bg-slate-800 px-1 text-center font-mono text-xs text-white"
-					bind:value={query.n_events}
-					onchange={() => ws.save()}
-				/>
-			</div>
+		{#if query.task === 'trake' && query.n_events}
+			<span
+				class="rounded-lg border border-ink-800 bg-ink-900 px-2 py-1 text-[11px] text-ink-300"
+				title="Số events do LLM tách từ prompt — không cần nhập tay"
+			>
+				<span class="tabular font-semibold text-rank-1">{query.n_events}</span> events
+			</span>
 		{/if}
 
 		<div class="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/80 px-2 py-1">

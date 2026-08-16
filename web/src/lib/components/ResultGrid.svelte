@@ -10,7 +10,7 @@
 	import { queuedImage } from '$lib/imgqueue';
     import type { Candidate, Query } from "$lib/types";
 
-    let { query, onzoom }: { query: Query; onzoom: (c: Candidate) => void } =
+    let { query, onzoom }: { query: Query; onzoom: (group: Candidate[]) => void } =
         $props();
 
     let cols = $state(4);
@@ -18,6 +18,14 @@
     /** TRAKE: đang gom frame vào đáp án nào. null = tạo đáp án mới. */
     let target = $state<string | null>(null);
     let grid = $state<HTMLDivElement | null>(null);
+
+    /** TRAKE hiện MỘT ô mỗi đáp án (ảnh = frame của action đầu), không rải phẳng n frame. */
+    let shown = $derived.by(() => {
+        const list = query.candidates;
+        if (!list.length || list[0].group == null) return list;
+        const seen = new Set<number>();
+        return list.filter((c) => (seen.has(c.group!) ? false : (seen.add(c.group!), true)));
+    });
 
     let thumbs = $state<Map<string, string>>(new Map());
 
@@ -31,6 +39,12 @@
     	}
     	fetchThumbs(list).then((m: Map<string, string>) => (thumbs = m));
     });
+
+    /** TRAKE: các candidate cùng `group` hợp thành MỘT đáp án, đúng thứ tự action. */
+    function groupOf(c: Candidate): Candidate[] {
+        if (c.group == null) return [c];
+        return query.candidates.filter((x) => x.group === c.group);
+    }
 
     function rankOf(c: Candidate): number | null {
         const i = query.answers.findIndex((a) =>
@@ -56,7 +70,7 @@
     function onKey(e: KeyboardEvent) {
         const tag = (e.target as HTMLElement)?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA") return;
-        const n = query.candidates.length;
+        const n = shown.length;
         if (!n) return;
         const move = {
             ArrowRight: 1,
@@ -74,10 +88,10 @@
         }
         if (e.key === " ") {
             e.preventDefault();
-            toggle(query.candidates[cursor]);
+            toggle(shown[cursor]);
         } else if (e.key === "Enter") {
             e.preventDefault();
-            onzoom(query.candidates[cursor]);
+            onzoom(groupOf(query.candidates[cursor]));
         }
     }
 
@@ -155,7 +169,7 @@
         <div
             class="grid gap-3"
             style="grid-template-columns: repeat({cols}, minmax(0, 1fr))">
-            {#each query.candidates as c, i (`${i}-${c.video_id}-${c.frame_id}`)}
+            {#each shown as c, i (`${i}-${c.video_id}-${c.frame_id}`)}
                 {@const rank = rankOf(c)}
                 <div
                     data-tile
@@ -169,7 +183,7 @@
               {rank ? tierRing(rank) : 'ring-ink-800 hover:ring-ink-600'}"
                         onclick={() => {
                             cursor = i;
-                            onzoom(c);
+                            onzoom(groupOf(c));
                         }}
                         title="Bấm để xem to">
                         <img

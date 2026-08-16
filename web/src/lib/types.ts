@@ -5,6 +5,8 @@ export interface FrameRef {
     frame_id: number;
     keyframe_n: number;
     pts_time: number;
+	/** Cần để quy đổi thời gian video <-> số frame khi xem clip 5s. */
+	fps?: number;
 }
 
 export interface Candidate extends FrameRef {
@@ -83,7 +85,8 @@ export function validate(q: Query): string[] {
     q.answers.forEach((a, i) => {
         const at = `#${i + 1}`;
         if (q.task === "trake") {
-            if (!q.n_events) errs.push(`${at}: chưa khai báo số events`);
+            // n_events tự suy từ số action LLM tách được; chưa search thì bỏ qua.
+            if (!q.n_events) return;
             else if (a.frames.length !== q.n_events)
                 errs.push(
                     `${at}: ${a.frames.length} frame, cần đúng ${q.n_events}`,
