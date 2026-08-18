@@ -1,6 +1,17 @@
 <img src="https://github.com/user-attachments/assets/044d4910-9013-47cf-995c-e0ace59bcd51" width="1080" alt="Login Screen" />
 <img src="https://github.com/user-attachments/assets/36e0ffa0-69d0-4bd2-b6b8-621c86729ae7" width="1080" alt="Home Screen" />
 
+<table>
+  <tr>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/429266ef-82cf-498b-8c96-8403e865d1d7" width="100%" alt="Home Screen 1" />
+    </td>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/a525e72f-a695-46f8-9b72-3638e1222c70" width="100%" alt="Login Screen" />
+    </td>
+  </tr>
+</table>
+
 # Huớng dẫn
 
 1. **Tải file [AIC_2026.ipynb](kaggle/AIC_2026.ipynb), xong mở [Kaggle](https://www.kaggle.com/)**
