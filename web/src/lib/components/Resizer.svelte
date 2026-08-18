@@ -40,8 +40,8 @@
 	onpointerup={end}
 	onpointercancel={end}
 	ondblclick={() => {
-		if (side === 'left') ws.leftW = 200;
-		else ws.rightW = 256;
+		if (side === 'left') ws.leftW = 236;
+		else ws.rightW = 292;
 		ws.save();
 	}}
 	title="Kéo để đổi bề rộng · bấm đúp để về mặc định"

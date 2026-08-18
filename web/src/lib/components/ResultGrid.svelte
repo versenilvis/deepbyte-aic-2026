@@ -97,11 +97,12 @@
         }
     }
 
+    /** Ring HƯỚNG VÀO TRONG: viền không ăn thêm chỗ nên lưới không xô nhau khi chọn. */
     function tierRing(rank: number): string {
-        if (rank === 1) return "ring-2 ring-rank-1";
-        if (rank <= 5) return "ring-2 ring-rank-5";
-        if (rank <= 20) return "ring-2 ring-rank-20";
-        return "ring-2 ring-rank-far";
+        if (rank === 1) return "ring-2 ring-inset ring-rank-1";
+        if (rank <= 5) return "ring-2 ring-inset ring-rank-5";
+        if (rank <= 20) return "ring-2 ring-inset ring-rank-20";
+        return "ring-2 ring-inset ring-rank-far";
     }
 </script>
 
@@ -109,13 +110,11 @@
 
 <!-- ── thanh công cụ ───────────────────────────────────────────── -->
 <div class="flex items-center gap-4 border-b border-ink-800 px-4 py-2.5">
-    <span class="text-xs font-semibold tracking-wide text-ink-300 uppercase">
-        Kết quả
-    </span>
+    <span class="label-xs">Kết quả</span>
 
     {#if query.task === "trake"}
         <select
-            class="cursor-pointer rounded-md border border-ink-800 bg-ink-850 px-2.5 py-1.5 text-xs
+            class="cursor-pointer rounded-lg border border-ink-800 bg-ink-825 px-2.5 py-1.5 text-xs
         text-ink-200 hover:border-ink-700"
             bind:value={target}>
             <option value={null}>tạo đáp án mới</option>
@@ -145,7 +144,7 @@
                 min="3"
                 max="10"
                 bind:value={cols}
-                class="w-24 cursor-pointer accent-ink-300" />
+                class="w-24 cursor-pointer accent-brand" />
             <span class="tabular w-4 text-ink-300">{cols}</span>
         </label>
     </div>
@@ -157,8 +156,8 @@
         <div
             class="grid gap-3"
             style="grid-template-columns: repeat({cols}, minmax(0, 1fr))">
-            {#each Array(cols * 3) as _}
-                <div class="aspect-video animate-pulse rounded-lg bg-ink-900">
+            {#each Array(cols * 3) as _, _i}
+                <div class="ph ph-{_i % 8} aspect-video animate-pulse rounded-lg opacity-60">
                 </div>
             {/each}
         </div>
@@ -177,12 +176,12 @@
                     data-tile
                     class="group relative rounded-lg transition-all
             {i === cursor
-                        ? 'ring-2 ring-ink-200 ring-offset-2 ring-offset-ink-950'
+                        ? 'ring-2 ring-brand ring-offset-2 ring-offset-ink-950'
                         : ''}">
                     <!-- BẤM ẢNH = XEM TO -->
                     <button
-                        class="block w-full cursor-zoom-in overflow-hidden rounded-lg ring-1 transition-all
-              {rank ? tierRing(rank) : 'ring-ink-800 hover:ring-ink-600'}"
+                        class="ph ph-{c.keyframe_n % 8} block w-full cursor-zoom-in overflow-hidden rounded-lg ring-1 ring-inset transition-all
+              {rank ? tierRing(rank) : 'ring-ink-800 hover:ring-ink-700'}"
                         onclick={() => {
                             cursor = i;
                             onzoom(groupOf(c));
@@ -193,14 +192,14 @@
                             alt=""
                             loading="lazy"
                             decoding="async"
-                            class="aspect-video w-full bg-ink-900 object-cover transition-transform duration-200 ease-out group-hover:scale-[1.04]" />
+                            class="thumb aspect-video w-full object-cover transition-transform duration-200 ease-out group-hover:scale-[1.04]" />
                     </button>
 
                     <!-- thứ hạng, nếu đã chọn -->
                     {#if rank}
                         <span
-                            class="tabular pointer-events-none absolute top-2 left-2 flex h-7 min-w-7
-                items-center justify-center rounded-md px-1.5 text-sm font-bold text-ink-950 shadow-lg
+                            class="tabular pointer-events-none absolute top-1.5 left-1.5 flex h-[22px] min-w-[22px]
+                items-center justify-center rounded-md px-1.5 font-mono text-xs font-bold text-ink-950 shadow-lg
                 {rank === 1
                                 ? 'bg-rank-1'
                                 : rank <= 5
@@ -212,11 +211,11 @@
 
                     <!-- NÚT THÊM / BỎ - luôn hiện, đủ to để bấm nhanh -->
                     <button
-                        class="absolute top-2 right-2 flex size-8 cursor-pointer items-center justify-center
-              rounded-md shadow-lg backdrop-blur transition-colors
+                        class="absolute top-1.5 right-1.5 flex size-[26px] cursor-pointer items-center justify-center
+              rounded-lg shadow-lg backdrop-blur transition-colors
               {rank
-                            ? 'bg-ok text-ink-950 hover:bg-bad hover:text-white'
-                            : 'bg-ink-950/80 text-ink-200 hover:bg-ink-100 hover:text-ink-950'}"
+                            ? 'bg-ok text-ink-950 hover:bg-bad'
+                            : 'bg-ink-950/78 text-ink-200 hover:bg-brand hover:text-ink-950'}"
                         title={rank
                             ? "Bỏ khỏi danh sách nộp"
                             : "Thêm vào danh sách nộp · Space"}
@@ -227,8 +226,8 @@
                         }}>
                         <HugeiconsIcon
                             icon={rank ? Tick02Icon : PlusSignIcon}
-                            size={17}
-                            strokeWidth={2.2} />
+                            size={15}
+                            strokeWidth={2.3} />
                     </button>
 
                     <div class="mt-1.5 flex items-baseline gap-2 px-0.5">

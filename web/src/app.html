@@ -3,13 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AIC DeepByte Searcher</title>
+    <meta name="theme-color" content="#0B0B0D" />
+    <title>DeepByte - Frame Search</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- PP Neue Montreal không có bản web; Be Vietnam Pro là bản thay thế cùng họ,
+         dấu tiếng Việt vẽ riêng. Máy nào cài sẵn bản gốc thì font-stack tự ưu tiên. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     %sveltekit.head%
   </head>
-  <body data-sveltekit-preload-data="hover" class="bg-[#0d0d0d] text-slate-100 antialiased selection:bg-indigo-500/30 selection:text-white">
+  <body data-sveltekit-preload-data="hover" class="bg-[#0B0B0D] text-ink-100 antialiased">
     <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>

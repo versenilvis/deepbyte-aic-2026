@@ -29,6 +29,8 @@
     import AnswerList from "$lib/components/AnswerList.svelte";
     import QueryList from "$lib/components/QueryList.svelte";
     import Login from "$lib/components/Login.svelte";
+    import Logo from "$lib/components/Logo.svelte";
+    import GithubMark from "$lib/components/GithubMark.svelte";
     import Inspector from "$lib/components/Inspector.svelte";
     import { scrub } from "$lib/scrub.svelte";
     import Resizer from "$lib/components/Resizer.svelte";
@@ -174,68 +176,75 @@
         }} />
 {:else}
     <div
-        class="flex h-screen flex-col overflow-hidden bg-[#0a0a0a] text-slate-100">
+        class="flex h-screen flex-col overflow-hidden bg-ink-950 text-ink-100">
         <!-- top navbar -->
         <header
-            class="flex h-13 shrink-0 items-center justify-between border-b border-slate-800/80 bg-[#111111] px-4">
-            <!-- brand and server status -->
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <h1
-                        class="text-sm font-extrabold tracking-tight text-white">
-                        AIC DeepByte Searcher
-                    </h1>
-                </div>
-
-                <!-- health status pill -->
-                <button
-                    class="cursor-pointer flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-medium transition-all {hp
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                        : 'border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'}"
-                    onclick={ping}
-                    title={hpErr ??
-                        `Đang nối ${getBase()} - bấm để kiểm tra lại`}>
-                    <span class="relative flex size-2">
-                        {#if hp}
-                            <span
-                                class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75">
-                            </span>
-                        {/if}
-                        <span
-                            class="relative inline-flex size-2 rounded-full {hp
-                                ? 'bg-emerald-400'
-                                : 'bg-rose-500'}">
-                        </span>
-                    </span>
-                    {#if hp}
-                        <span>{hp.frames.toLocaleString("vi")} frames</span>
-                        {#if pingLatency !== null}
-                            <span
-                                class="font-mono text-[10px] text-emerald-500">
-                                ({pingLatency}ms)
-                            </span>
-                        {/if}
-                    {:else}
-                        <span>Backend Offline</span>
-                    {/if}
-                </button>
+            class="flex h-13 shrink-0 items-center gap-3.5 border-b border-ink-800 bg-ink-900 px-4">
+            <!-- thương hiệu -->
+            <div class="flex items-center gap-2.5">
+                <Logo size={21} uid="nav" />
+                <span class="text-[15px] font-semibold tracking-[-0.018em] text-ink-50">
+                    DeepByte
+                </span>
+                <span class="h-3.5 w-px bg-ink-800"></span>
+                <span class="text-[13px] font-light tracking-[-0.005em] text-ink-400">
+                    Frame Search
+                </span>
             </div>
 
-            <!-- action buttons -->
-            <div class="flex items-center gap-2">
-                <div class="h-4 w-px bg-slate-800"></div>
+            <!-- trạng thái backend -->
+            <button
+                class="flex cursor-pointer items-center gap-2 rounded-full border px-2.5 py-1 transition-colors {hp
+                    ? 'border-ink-800 bg-ink-825 hover:border-ink-700'
+                    : 'border-bad/30 bg-bad/8 hover:bg-bad/14'}"
+                onclick={ping}
+                title={hpErr ?? `Đang nối ${getBase()} - bấm để kiểm tra lại`}>
+                <span
+                    class="size-1.5 rounded-full {hp
+                        ? 'bg-brand ring-[3px] ring-brand/18'
+                        : 'bg-bad ring-[3px] ring-bad/18'}">
+                </span>
+                {#if hp}
+                    <span class="tabular font-mono text-[11px] font-medium text-ink-200">
+                        {hp.frames.toLocaleString("vi")} frames
+                    </span>
+                    {#if pingLatency !== null}
+                        <span class="tabular font-mono text-[10px] text-ink-500">
+                            {pingLatency}ms
+                        </span>
+                    {/if}
+                {:else}
+                    <span class="text-[11px] font-medium text-bad">Backend offline</span>
+                {/if}
+            </button>
 
-                <!-- import workspace json -->
-                <label class="btn-secondary cursor-pointer">
+            <div class="flex-1"></div>
+
+            <!-- hành động -->
+            <div class="flex items-center gap-2">
+                <a
+                    class="btn-ghost size-8 px-0"
+                    href="https://github.com/versenilvis/deepbyte-aic-2026"
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Mã nguồn trên GitHub">
+                    <GithubMark size={16} />
+                </a>
+
+                <span class="h-4 w-px bg-ink-800"></span>
+
+                <label class="btn-secondary h-8 cursor-pointer">
                     <svg
                         class="size-3.5"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3">
-                        </path>
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <path d="M7 10l5 5 5-5"></path>
+                        <path d="M12 15V3"></path>
                     </svg>
                     <span>Nạp JSON</span>
                     <input
@@ -245,9 +254,8 @@
                         onchange={importJson} />
                 </label>
 
-                <!-- save workspace json -->
                 <button
-                    class="cursor-pointer btn-secondary"
+                    class="btn-secondary h-8"
                     onclick={exportJson}
                     title="Lưu lại tiến trình hiện tại thành file JSON">
                     <svg
@@ -255,27 +263,28 @@
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                            d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z">
-                        </path>
-                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                        <polyline points="7 3 7 8 15 8"></polyline>
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <path d="M17 21v-8H7v8"></path>
+                        <path d="M7 3v5h8"></path>
                     </svg>
                     <span>Lưu workspace</span>
                 </button>
 
-                <!-- export zip -->
                 <button
-                    class="cursor-pointer btn-primary"
+                    class="btn-primary h-8"
                     onclick={() => (showExportModal = true)}>
                     <svg
                         class="size-3.5"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2.5">
-                        <polyline points="20 6 9 17 4 12"></polyline>
+                        stroke-width="2.4"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M20 6L9 17l-5-5"></path>
                     </svg>
                     <span>Xuất submission.zip</span>
                 </button>
@@ -285,10 +294,10 @@
         <!-- error banner if any -->
         {#if ws.error}
             <div
-                class="flex items-center justify-between border-b border-rose-900/60 bg-rose-950/80 px-4 py-2 text-xs text-rose-200">
+                class="flex items-center justify-between border-b border-bad/25 bg-bad/10 px-4 py-2 text-xs text-bad">
                 <div class="flex items-center gap-2">
                     <svg
-                        class="size-4 text-rose-400"
+                        class="size-4 shrink-0"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -300,7 +309,7 @@
                     <span>{ws.error}</span>
                 </div>
                 <button
-                    class="cursor-pointer text-rose-400 hover:text-white"
+                    class="cursor-pointer text-bad/70 hover:text-bad"
                     onclick={() => (ws.error = null)}>
                     <HugeiconsIcon
                         icon={Cancel01Icon}
@@ -315,7 +324,7 @@
             <QueryList />
             <Resizer side="left" />
 
-            <main class="flex min-w-0 flex-1 flex-col bg-[#0d0d0d]">
+            <main class="flex min-w-0 flex-1 flex-col bg-ink-950">
                 {#if ws.active}
                     <SearchPanel query={ws.active} />
                     <ResultGrid
@@ -323,32 +332,20 @@
                         onzoom={(g) => (zoom = g)} />
                 {:else}
                     <div
-                        class="flex flex-1 flex-col items-center justify-center p-8 text-center">
-                        <div
-                            class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 shadow-xl">
-                            <svg
-                                class="size-8 text-indigo-400"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.5">
-                                <path
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                                </path>
-                            </svg>
+                        class="flex flex-1 flex-col items-center justify-center gap-5 p-8 text-center">
+                        <Logo size={46} uid="empty" />
+                        <div>
+                            <h2 class="text-lg font-medium tracking-[-0.025em] text-ink-50">
+                                See Deeper. Build Smarter.
+                            </h2>
+                            <p
+                                class="mx-auto mt-2.5 max-w-sm text-[13px] leading-relaxed font-light text-ink-400">
+                                Chọn hoặc tạo một truy vấn ở thanh bên trái theo đúng tên đề bài
+                                BTC phát (ví dụ
+                                <span class="font-mono text-brand">query-1-kis</span>
+                                ) để bắt đầu tìm kiếm.
+                            </p>
                         </div>
-                        <h2 class="text-base font-bold text-slate-200">
-                            Chào mừng đến với AIC DeepByte Searcher
-                        </h2>
-                        <p
-                            class="mt-1.5 max-w-sm text-xs leading-relaxed text-slate-500">
-                            Chọn hoặc tạo một truy vấn ở thanh bên trái theo tên
-                            đề bài (ví dụ: <span
-                                class="font-mono text-indigo-400">
-                                query-1-kis
-                            </span>
-                            ) để bắt đầu tìm kiếm và thu thập đáp án
-                        </p>
                     </div>
                 {/if}
             </main>
@@ -370,16 +367,16 @@
     {#if showExportModal}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/85 p-4 backdrop-blur-sm"
             onclick={() => (showExportModal = false)}>
             <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
             <div
-                class="w-full max-w-lg rounded-2xl border border-slate-800 bg-[#161616] p-5 shadow-2xl"
+                class="w-full max-w-lg rounded-[14px] border border-ink-800 bg-ink-900 p-5 shadow-2xl"
                 onclick={(e) => e.stopPropagation()}>
                 <div class="mb-4 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <div
-                            class="flex size-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400">
+                            class="flex size-7 items-center justify-center rounded-lg bg-brand/16 text-brand">
                             <svg
                                 class="size-4"
                                 viewBox="0 0 24 24"
@@ -389,12 +386,12 @@
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                         </div>
-                        <h3 class="text-sm font-bold text-white">
+                        <h3 class="text-sm font-semibold text-ink-50">
                             Xuất gói nộp bài (submission.zip)
                         </h3>
                     </div>
                     <button
-                        class="cursor-pointer text-slate-500 hover:text-white"
+                        class="cursor-pointer text-ink-500 hover:text-ink-100"
                         onclick={() => (showExportModal = false)}>
                         <HugeiconsIcon
                             icon={Cancel01Icon}
@@ -405,18 +402,18 @@
 
                 <div class="mb-4 space-y-2">
                     <div
-                        class="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-xs">
+                        class="rounded-lg border border-ink-800 bg-ink-825 p-3 text-xs">
                         <div
-                            class="flex items-center justify-between text-slate-300">
+                            class="flex items-center justify-between text-ink-300">
                             <span>Tổng số file CSV:</span>
-                            <span class="font-mono font-bold text-white">
+                            <span class="font-mono font-semibold text-ink-50">
                                 {Object.keys(exportReport.files).length}
                             </span>
                         </div>
                         <div
-                            class="mt-1 flex items-center justify-between text-slate-300">
+                            class="mt-1 flex items-center justify-between text-ink-300">
                             <span>Cấu trúc zip:</span>
-                            <span class="font-mono text-indigo-400">
+                            <span class="font-mono text-brand">
                                 submission/*.csv
                             </span>
                         </div>
@@ -424,8 +421,8 @@
 
                     {#if !exportReport.ok}
                         <div
-                            class="rounded-lg border border-rose-900/60 bg-rose-950/40 p-3 text-xs text-rose-300">
-                            <p class="font-bold">Phát hiện lỗi định dạng:</p>
+                            class="rounded-lg border border-bad/25 bg-bad/8 p-3 text-xs text-bad">
+                            <p class="font-semibold">Phát hiện lỗi định dạng:</p>
                             <ul
                                 class="mt-1 max-h-36 space-y-1 overflow-y-auto pl-4">
                                 {#each Object.entries(exportReport.problems) as [qid, perrs]}
@@ -438,7 +435,7 @@
                         </div>
                     {:else}
                         <div
-                            class="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-400">
+                            class="flex items-center gap-2 rounded-lg border border-ok/28 bg-ok/8 p-3 text-xs text-ok">
                             <svg
                                 class="size-4 shrink-0"
                                 viewBox="0 0 24 24"
@@ -457,12 +454,12 @@
 
                 <div class="flex justify-end gap-2">
                     <button
-                        class="cursor-pointer btn-secondary"
+                        class="btn-secondary h-9"
                         onclick={() => (showExportModal = false)}>
                         Huỷ
                     </button>
                     <button
-                        class="cursor-pointer btn-primary"
+                        class="btn-primary h-9"
                         onclick={handleExportZip}>
                         Tải về submission.zip
                     </button>

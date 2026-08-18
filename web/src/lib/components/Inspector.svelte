@@ -48,7 +48,7 @@
 <svelte:window onkeydown={(e) => e.key === 'Escape' && onclose()} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/92 p-4" onclick={onclose}>
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/95 p-4 backdrop-blur-sm" onclick={onclose}>
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 	<div
 		class="flex max-h-[96vh] w-full max-w-4xl flex-col gap-2.5"
@@ -59,25 +59,25 @@
 			<div class="flex items-center gap-1.5">
 				{#each items as it, i (i)}
 					<button
-						class="btn h-9 px-4 text-sm {i === active
-							? 'bg-ink-100 text-ink-950'
-							: 'border border-ink-800 bg-ink-900 text-ink-300 hover:bg-ink-850'}"
+						class="btn h-[34px] px-3.5 text-[12.5px] {i === active
+							? 'bg-brand font-semibold text-ink-950'
+							: 'border border-ink-800 bg-ink-850 text-ink-300 hover:border-ink-700 hover:text-ink-100'}"
 						onclick={() => (active = i)}
 					>
 						Action {i + 1}
-						<span class="tabular ml-1 opacity-70">{picked[i] ?? it.frame_id}</span>
+						<span class="tabular ml-1 font-mono text-[11.5px] font-semibold opacity-65">{picked[i] ?? it.frame_id}</span>
 					</button>
 				{/each}
 
-				<button class="btn-ghost ml-auto size-9" onclick={onclose}>
+				<button class="btn-ghost ml-auto size-[34px]" onclick={onclose}>
 					<HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={1.9} />
 				</button>
 			</div>
 
 			{#if broken}
-				<p class="flex items-center gap-1.5 rounded-md bg-bad/10 px-3 py-2 text-xs text-bad">
+				<p class="flex items-center gap-1.5 rounded-lg border border-bad/25 bg-bad/8 px-3 py-2 text-xs text-bad">
 					<HugeiconsIcon icon={Alert02Icon} size={14} strokeWidth={1.8} />
-					Frame phải tăng dần theo thứ tự action — hiện đang sai thứ tự.
+					Frame phải tăng dần theo thứ tự action - hiện đang sai thứ tự.
 				</p>
 			{/if}
 		{/if}
@@ -95,29 +95,32 @@
 					onpick={(f) => (picked[active] = f)}
 				/>
 			{:else}
-				<img
-					src={imageUrl(cur.video_id, cur.keyframe_n, 1280)}
-					alt=""
-					class="max-h-[62vh] w-full rounded-lg bg-ink-900 object-contain"
-				/>
+				<div class="ph ph-{cur.keyframe_n % 8} flex max-h-[62vh] min-h-64 items-center justify-center overflow-hidden rounded-xl">
+					<img
+						src={imageUrl(cur.video_id, cur.keyframe_n, 1280)}
+						alt=""
+						onload={(e) => e.currentTarget.classList.add('is-loaded')}
+						class="thumb max-h-[62vh] w-full object-contain"
+					/>
+				</div>
 			{/if}
 
 			<!-- ── thông tin + hành động ────────────────────────────── -->
-			<div class="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-lg bg-ink-900 p-3 text-xs">
+			<div class="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-[10px] border border-ink-800 bg-ink-900 p-3 text-xs">
 				<div class="flex flex-wrap items-center gap-3">
 					<span class="font-mono text-ink-200">
 						{cur.video_id} · frame <span class="tabular font-bold text-rank-1">{picked[active] ?? cur.frame_id}</span>
 						· {cur.pts_time.toFixed(1)}s · {cur.fps ?? 25}fps
 					</span>
 
-					<button class="btn-primary h-9 px-3" onclick={() => (mode = mode === 'video' ? 'image' : 'video')}>
+					<button class="btn-secondary h-8 px-3" onclick={() => (mode = mode === 'video' ? 'image' : 'video')}>
 						<HugeiconsIcon icon={mode === 'video' ? Image01Icon : Video01Icon} size={14} strokeWidth={1.7} />
 						{mode === 'video' ? 'Xem ảnh' : 'Clip 5s + đếm frame'}
 					</button>
 
 					{#if onpick}
 						<button
-							class="btn-primary ml-auto h-9 px-5 text-sm"
+							class="btn-primary ml-auto h-[34px] px-5 text-[12.5px]"
 							disabled={broken}
 							onclick={() => onpick?.([...picked])}
 						>
@@ -126,15 +129,15 @@
 					{/if}
 
 					{#if !isTrake}
-						<button class="btn-ghost size-9" onclick={onclose}>
+						<button class="btn-ghost size-8" onclick={onclose}>
 							<HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={1.9} />
 						</button>
 					{/if}
 				</div>
 
-				{#if cur.caption}<p class="text-ink-300"><span class="text-ink-500">caption</span> {cur.caption}</p>{/if}
-				{#if cur.speech}<p class="text-ink-300"><span class="text-ink-500">speech</span> {cur.speech}</p>{/if}
-				{#if cur.ocr}<p class="text-ink-300"><span class="text-ink-500">ocr</span> {cur.ocr}</p>{/if}
+				{#if cur.caption}<p class="leading-relaxed text-ink-300"><span class="text-ink-500">caption</span> {cur.caption}</p>{/if}
+				{#if cur.speech}<p class="leading-relaxed text-ink-300"><span class="text-ink-500">speech</span> {cur.speech}</p>{/if}
+				{#if cur.ocr}<p class="leading-relaxed text-ink-300"><span class="text-ink-500">ocr</span> {cur.ocr}</p>{/if}
 			</div>
 		{/if}
 	</div>

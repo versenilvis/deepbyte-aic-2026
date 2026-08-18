@@ -1,87 +1,100 @@
 @import 'tailwindcss';
 
 /*
- * ĐEN NHÁM, TRUNG TÍNH TUYỆT ĐỐI (chroma = 0).
+ * BRAND KIT DEEPBYTE.
  *
- * Nội dung chính là ảnh video đầy màu, nên giao diện phải lùi lại. Bảng màu trước
- * ám xanh (hue 265) làm nền trông tím nhạt; giờ bỏ hẳn sắc, chỉ còn độ sáng.
+ * Deep Black #0B0B0D, Slate #1A1A1F, Stone #E6E6E9, Lavender #8C7CFF, Mist #F5F5F7.
+ *
+ * Hai hệ màu, hai vai, không bao giờ đổi cho nhau:
+ *   - LAVENDER = hành động. Nút chính, focus, truy vấn đang mở, ô đã đánh dấu.
+ *   - VÀNG CÁT = thứ hạng. Điểm chỉ nhảy ở hạng 1/5/20/50/100 nên bậc màu phải
+ *     đọc được từ xa trong lưới 100 ô, và không được lẫn với "đang chọn".
  *
  * Component đang dùng lẫn hai bộ tên (`slate-*` và `ink-*`) nên ở đây ghi đè CẢ HAI
  * về cùng một thang. Không phải sửa lại từng file.
- *
- * - Hành động chính dùng ĐỘ TƯƠNG PHẢN, không dùng màu.
- * - Thứ hạng là một dải độ sáng của cùng sắc vàng cát -> đọc ra "giảm dần", không
- *   phải "ba loại khác nhau".
- * - Màu trạng thái để chroma thấp, chỉ đủ phân biệt.
  */
 @theme {
-	/* ---- thang xám trung tính: ink-* và slate-* trỏ chung ---- */
-	--color-ink-950: oklch(0.135 0 0);
-	--color-ink-900: oklch(0.175 0 0);
-	--color-ink-850: oklch(0.205 0 0);
-	--color-ink-800: oklch(0.245 0 0);
-	--color-ink-700: oklch(0.33 0 0);
-	--color-ink-500: oklch(0.53 0 0);
-	--color-ink-300: oklch(0.73 0 0);
-	--color-ink-200: oklch(0.85 0 0);
-	--color-ink-100: oklch(0.94 0 0);
+	/* ---- chữ ----
+	   PP Neue Montreal không có bản web. Máy nào cài sẵn thì dùng bản gốc, còn lại
+	   rơi về Be Vietnam Pro: cùng họ neo-grotesque, dấu tiếng Việt vẽ riêng chứ
+	   không ghép từ font Latin. */
+	--font-sans: 'PP Neue Montreal', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-	--color-slate-950: oklch(0.135 0 0);
-	--color-slate-900: oklch(0.175 0 0);
-	--color-slate-800: oklch(0.245 0 0);
-	--color-slate-700: oklch(0.33 0 0);
-	--color-slate-600: oklch(0.43 0 0);
-	--color-slate-500: oklch(0.53 0 0);
-	--color-slate-400: oklch(0.64 0 0);
-	--color-slate-300: oklch(0.73 0 0);
-	--color-slate-200: oklch(0.85 0 0);
-	--color-slate-100: oklch(0.94 0 0);
+	/* ---- ba mức nền + thang xám: ink-* và slate-* trỏ chung ---- */
+	--color-ink-950: #0b0b0d; /* nền app, nền lưới kết quả */
+	--color-ink-925: #0e0e12; /* hai rail trái/phải */
+	--color-ink-900: #131318; /* header, panel tìm kiếm, thẻ */
+	--color-ink-850: #1a1a1f; /* nút phụ, hàng đang mở (Slate) */
+	--color-ink-825: #17171c; /* ô nhập, chip */
+	--color-ink-800: #26262e; /* viền mặc định */
+	--color-ink-700: #3a3a45; /* viền khi rê chuột, vạch chia */
+	--color-ink-500: #6a6a76; /* chữ mờ, chú thích */
+	--color-ink-400: #8a8a97; /* chữ phụ */
+	--color-ink-300: #a8a8b4;
+	--color-ink-200: #c4c4ce;
+	--color-ink-100: #e6e6e9; /* chữ chính (Stone) */
+	--color-ink-50: #f5f5f7; /* Mist */
+
+	--color-slate-950: #0b0b0d;
+	--color-slate-900: #131318;
+	--color-slate-800: #26262e;
+	--color-slate-700: #3a3a45;
+	--color-slate-600: #55555f;
+	--color-slate-500: #6a6a76;
+	--color-slate-400: #8a8a97;
+	--color-slate-300: #a8a8b4;
+	--color-slate-200: #c4c4ce;
+	--color-slate-100: #e6e6e9;
+
+	/* ---- lavender: MÀU CỦA HÀNH ĐỘNG ---- */
+	--color-brand: #8c7cff;
+	--color-brand-hi: #a79bff;
+	--color-brand-dim: #5b4fb8;
 
 	/* ---- thứ hạng: một sắc vàng cát, giảm dần ---- */
-	--color-rank-1: oklch(0.83 0.12 85);
-	--color-rank-5: oklch(0.71 0.08 80);
-	--color-rank-20: oklch(0.58 0.04 80);
-	--color-rank-far: oklch(0.44 0 0);
+	--color-rank-1: #e3b341;
+	--color-rank-5: #c9994a;
+	--color-rank-20: #8a7250;
+	--color-rank-far: #5c5c68;
 
-	/* ---- loại truy vấn: cùng độ sáng, chroma thấp -> đọc ra là anh em ---- */
-	--color-task-kis: oklch(0.7 0.06 240);
-	--color-task-qa: oklch(0.7 0.06 175);
-	--color-task-trake: oklch(0.7 0.06 305);
+	/* ---- loại truy vấn: ba sắc chroma thấp, phân biệt được mà không tranh với lavender ---- */
+	--color-task-kis: #6f8ad4;
+	--color-task-qa: #58ac9b;
+	--color-task-trake: #c08ad8;
 
-	/* ---- trạng thái, đã hạ bão hoà cho khỏi chói ---- */
-	--color-ok: oklch(0.72 0.09 160);
-	--color-warn: oklch(0.78 0.1 75);
-	--color-bad: oklch(0.65 0.13 25);
+	/* ---- trạng thái ---- */
+	--color-ok: #4fbf8b;
+	--color-warn: #e3b341;
+	--color-bad: #e06a5c;
 
-	/* các họ màu component cũ còn dùng -> kéo về cùng tông */
-	--color-emerald-400: oklch(0.75 0.08 160);
-	--color-emerald-500: oklch(0.72 0.08 160);
-	--color-rose-400: oklch(0.7 0.11 25);
-	--color-rose-500: oklch(0.65 0.12 25);
+	/* Họ màu component cũ còn gọi tên -> kéo về bảng brand, khỏi phải sửa từng file.
+	   indigo/violet/purple đều là lavender; emerald là "hợp lệ"; rose là "lỗi". */
+	--color-indigo-950: #1a1730;
+	--color-indigo-300: #a79bff;
+	--color-indigo-400: #8c7cff;
+	--color-indigo-500: #8c7cff;
+	--color-indigo-600: #7466e6;
+	--color-purple-500: #8c7cff;
+	--color-purple-600: #7466e6;
+	--color-violet-500: #8c7cff;
+	--color-violet-600: #7466e6;
 
-	/* indigo/purple là nguồn gây "ám tím". Kéo về TRUNG TÍNH HOÀN TOÀN để màu duy nhất
-	   còn lại trong giao diện là vàng thứ hạng. Nút chính vốn đã dùng tương phản,
-	   không cần thêm màu nhấn nào. */
-	--color-indigo-950: oklch(0.205 0 0);
-	--color-indigo-300: oklch(0.85 0 0);
-	--color-indigo-400: oklch(0.73 0 0);
-	--color-indigo-500: oklch(0.53 0 0);
-	--color-indigo-600: oklch(0.43 0 0);
-	--color-purple-500: oklch(0.53 0 0);
-	--color-purple-600: oklch(0.43 0 0);
-	--color-violet-500: oklch(0.53 0 0);
-	--color-violet-600: oklch(0.43 0 0);
+	--color-emerald-400: #4fbf8b;
+	--color-emerald-500: #45a87a;
+	--color-rose-400: #e06a5c;
+	--color-rose-500: #cf5a4d;
 
-	/* slider trọng số: giữ 3 sắc để phân biệt nhóm, nhưng hạ bão hoà cho khỏi chói */
-	--color-blue-400: oklch(0.7 0.07 240);
-	--color-blue-500: oklch(0.62 0.08 240);
-	--color-green-400: oklch(0.72 0.07 155);
-	--color-green-500: oklch(0.66 0.08 155);
-	--color-orange-400: oklch(0.76 0.09 65);
-	--color-orange-500: oklch(0.7 0.1 65);
-	--color-amber-400: oklch(0.8 0.09 80);
-	--color-amber-500: oklch(0.74 0.1 80);
-	--color-yellow-400: oklch(0.82 0.09 90);
+	/* slider trọng số: hình ảnh = lavender, lời nói = xanh, chữ = vàng cát */
+	--color-blue-400: #8c7cff;
+	--color-blue-500: #7466e6;
+	--color-green-400: #58ac9b;
+	--color-green-500: #4a9787;
+	--color-orange-400: #e3b341;
+	--color-orange-500: #c9994a;
+	--color-amber-400: #e3b341;
+	--color-amber-500: #c9994a;
+	--color-yellow-400: #e3b341;
 }
 
 html,
@@ -89,6 +102,7 @@ body {
 	height: 100%;
 	background: var(--color-ink-950);
 	color: var(--color-ink-100);
+	font-family: var(--font-sans);
 }
 
 *,
@@ -102,6 +116,11 @@ body {
 	scrollbar-color: var(--color-ink-800) transparent;
 }
 
+::selection {
+	background: rgb(140 124 255 / 0.28);
+	color: var(--color-ink-50);
+}
+
 /* số liệu dùng chữ số đều bề ngang để cột không nhảy khi giá trị đổi */
 .tabular,
 kbd {
@@ -109,29 +128,31 @@ kbd {
 }
 
 kbd {
-	@apply rounded border border-ink-800 bg-ink-900 px-1.5 py-0.5 font-mono text-[11px] text-ink-300;
+	@apply rounded-[5px] border border-ink-800 bg-ink-825 px-1.5 py-0.5 font-mono text-[10px] text-ink-400;
 }
 
 @utility field {
-	@apply w-full rounded-md border border-ink-800 bg-ink-850 px-2.5 py-1.5 text-sm text-ink-100
-    transition-colors placeholder:text-ink-500 focus:border-ink-700 focus:bg-ink-900 focus:outline-none;
+	@apply w-full rounded-lg border border-ink-800 bg-ink-825 px-2.5 py-1.5 text-sm text-ink-100
+    transition-colors placeholder:text-ink-500 focus:border-brand focus:bg-ink-825
+    focus:ring-[3px] focus:ring-brand/14 focus:outline-none;
 }
 
 @utility btn {
-	@apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5
+	@apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-1.5
     text-xs font-medium whitespace-nowrap transition-colors select-none
     disabled:cursor-not-allowed disabled:opacity-35;
 }
 
-/* hành động chính: tương phản, không màu */
+/* hành động chính: lavender nền, chữ đen.
+   Chữ trắng trên lavender chỉ đạt ~2.6:1 nên KHÔNG dùng được. */
 @utility btn-primary {
-	@apply btn bg-ink-100 text-ink-950 hover:bg-white;
+	@apply btn bg-brand font-semibold text-ink-950 hover:bg-brand-hi;
 }
 
 /* THIẾU cái này là nút mất inline-flex -> icon và chữ xếp chồng lên nhau */
 @utility btn-secondary {
-	@apply btn border border-ink-800 bg-ink-900 text-ink-300 hover:border-ink-700
-    hover:bg-ink-850 hover:text-ink-100;
+	@apply btn border border-ink-800 bg-ink-850 text-ink-300 hover:border-ink-700
+    hover:bg-ink-800 hover:text-ink-100;
 }
 
 @utility btn-soft {
@@ -139,11 +160,11 @@ kbd {
 }
 
 @utility btn-ghost {
-	@apply btn text-ink-300 hover:bg-ink-850 hover:text-ink-100;
+	@apply btn text-ink-400 hover:bg-ink-850 hover:text-ink-100;
 }
 
 /* Mũi tên tăng/giảm mặc định của <input type=number> chỉ cao ~7px, gần như không bấm
-   trúng. Ẩn đi — chỗ nào cần bước từng frame đã có nút lùi/tới cỡ 44px riêng. */
+   trúng. Ẩn đi - chỗ nào cần bước từng frame đã có nút lùi/tới cỡ 44px riêng. */
 input[type='number'].no-spin {
 	appearance: textfield;
 	-moz-appearance: textfield;
@@ -155,6 +176,36 @@ input[type='number'].no-spin::-webkit-inner-spin-button {
 	margin: 0;
 }
 
+/*
+ * Ô giữ chỗ trong lúc thumbnail chưa về.
+ *
+ * <img> chưa có src (hoặc tải hỏng) thì Chrome vẽ icon "ảnh vỡ" - xấu, và với lưới
+ * 100 ô thì nhìn như trang lỗi. Nền chuyển sắc đơn sắc đặt ở THẺ BỌC, còn ảnh nằm
+ * trên với opacity 0 cho tới khi tải xong. Hỏng thì ảnh cứ trong suốt, người dùng
+ * chỉ thấy ô giữ chỗ.
+ *
+ * Tám biến thể lấy theo art direction của brand: đơn sắc, trừu tượng, hai ô có ánh tím.
+ */
+.ph {
+	background: #141418;
+}
+.ph-0 { background: linear-gradient(105deg, #0f0f13 0%, #2a2a31 42%, #4a4a54 50%, #25252c 58%, #101014 100%); }
+.ph-1 { background: radial-gradient(120% 90% at 30% 20%, #3a3a44 0%, #1c1c22 55%, #0e0e12 100%); }
+.ph-2 { background: linear-gradient(180deg, #26262e 0%, #111116 60%, #1b1b21 100%); }
+.ph-3 { background: linear-gradient(70deg, #0d0d11 0%, #1e1e25 45%, #54545f 72%, #1a1a20 100%); }
+.ph-4 { background: radial-gradient(80% 120% at 70% 80%, #5b5266 0%, #22222a 50%, #0f0f13 100%); }
+.ph-5 { background: linear-gradient(135deg, #1a1a20 0%, #33333d 50%, #0f0f14 100%); }
+.ph-6 { background: linear-gradient(90deg, #101015 0%, #2f2f38 30%, #161620 55%, #3d3d47 80%, #111116 100%); }
+.ph-7 { background: radial-gradient(60% 100% at 50% 0%, #4a4453 0%, #1a1a20 60%, #0d0d11 100%); }
+
+.thumb {
+	opacity: 0;
+	transition: opacity 0.28s ease-out;
+}
+.thumb.is-loaded {
+	opacity: 1;
+}
+
 @utility label-xs {
-	@apply text-[11px] font-medium tracking-[0.08em] text-ink-500 uppercase;
+	@apply text-[10px] font-semibold tracking-[0.13em] text-ink-500 uppercase;
 }

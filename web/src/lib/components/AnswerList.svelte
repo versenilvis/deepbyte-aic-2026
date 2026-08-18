@@ -40,32 +40,29 @@
 </script>
 
 <aside
-    class="flex shrink-0 flex-col border-l border-ink-800 bg-ink-950"
+    class="flex shrink-0 flex-col border-l border-ink-800 bg-ink-925"
     style="width: {ws.rightW}px">
     <div class="border-b border-ink-800 px-3 py-2.5">
         <div class="flex items-baseline justify-between">
-            <h2
-                class="text-xs font-semibold tracking-wide text-ink-300 uppercase">
-                Sẽ nộp
-            </h2>
+            <h2 class="label-xs">Sẽ nộp</h2>
             <span
                 class="tabular text-xs {query.answers.length > MAX_ANSWERS
                     ? 'text-bad'
                     : 'text-ink-500'}">
-                {query.answers.length}
+                <span class="text-ink-200">{query.answers.length}</span>
                 <span class="text-ink-700">/{MAX_ANSWERS}</span>
             </span>
         </div>
 
         <!-- thanh tiến độ theo các mốc ăn điểm -->
-        <div class="mt-2 flex h-1 gap-px overflow-hidden rounded-full">
+        <div class="mt-2.5 flex h-1 gap-0.5 overflow-hidden rounded-full">
             {#each RANK_TIERS as t, i}
                 {@const prev = i === 0 ? 0 : RANK_TIERS[i - 1]}
                 {@const filled = Math.min(
                     Math.max(query.answers.length - prev, 0),
                     t - prev,
                 )}
-                <div class="flex-1 bg-ink-850" style="flex-grow: {t - prev}">
+                <div class="flex-1 bg-ink-800" style="flex-grow: {t - prev}">
                     <div
                         class="h-full {i === 0
                             ? 'bg-rank-1'
@@ -77,7 +74,7 @@
                 </div>
             {/each}
         </div>
-        <p class="mt-1.5 text-[11px] leading-relaxed text-ink-500">
+        <p class="mt-2 text-[10.5px] leading-relaxed text-ink-500">
             Thứ tự ở đây <span class="text-ink-300">chính là thứ hạng</span>
             . Kéo để đổi.
         </p>
@@ -111,9 +108,12 @@
                 }}
                 ondragleave={() => (over = null)}
                 ondrop={() => drop(i)}
-                class="group border-b border-ink-900 px-1.5 py-1.5 transition-colors
+                class="group border-b border-ink-900 px-2 py-2 transition-colors
           {dragFrom === i ? 'opacity-30' : ''}
           {over === i && dragFrom !== i ? 'bg-ink-850' : 'hover:bg-ink-900'}">
+                <!-- Hàng 1: hạng + mã frame + nút.
+                     TRAKE có tới n ảnh trên một đáp án; để nút chung hàng với ảnh thì
+                     ảnh đẩy nút văng khỏi rail. Nút lên góc phải trên, ảnh xuống hàng dưới. -->
                 <div class="flex items-center gap-2">
                     <HugeiconsIcon
                         icon={DragDropVerticalIcon}
@@ -122,62 +122,68 @@
                         class="shrink-0 cursor-grab text-ink-700 group-hover:text-ink-500" />
 
                     <span
-                        class="tabular w-6 shrink-0 text-right text-base font-bold {tierText(
+                        class="tabular w-5 shrink-0 text-right text-[15px] leading-none font-bold {tierText(
                             rank,
                         )}">
                         {rank}
                     </span>
 
-                    <div class="flex min-w-0 flex-1 gap-1">
-                        {#each a.frames as f (f.frame_id)}
-                            <img
-								use:queuedImage={imageUrl(f.video_id, f.keyframe_n, 256)}
-                                alt=""
-                                loading="lazy"
-                                class="h-10 w-16 shrink-0 rounded border border-ink-800 bg-ink-900 object-cover" />
-                        {/each}
-                    </div>
+                    <span
+                        class="min-w-0 flex-1 truncate font-mono text-[10.5px] text-ink-500">
+                        {a.frames[0]?.video_id}
+                        <span class="text-ink-700">·</span>
+                        <span class="tabular text-ink-400">
+                            {a.frames.map((f) => f.frame_id).join(", ")}
+                        </span>
+                    </span>
 
-                    <div
-                        class="flex shrink-0 gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
+                    <div class="flex shrink-0 gap-0.5">
                         <button
-                            class="cursor-pointer rounded p-1 text-ink-500 hover:bg-ink-800 hover:text-rank-1"
+                            class="cursor-pointer rounded-md p-1 text-ink-600 transition-colors hover:bg-ink-800 hover:text-rank-1"
                             title="Đẩy lên hạng 1"
                             onclick={() => ws.promote(query, i)}>
                             <HugeiconsIcon
                                 icon={ArrowUpDoubleIcon}
-                                size={16}
+                                size={15}
                                 strokeWidth={1.9} />
                         </button>
                         <button
-                            class="cursor-pointer rounded p-1 text-ink-500 hover:bg-ink-800 hover:text-bad"
-                            title="Bỏ"
+                            class="cursor-pointer rounded-md p-1 text-ink-600 transition-colors hover:bg-bad/12 hover:text-bad"
+                            title="Bỏ khỏi danh sách nộp"
                             onclick={() => ws.removeAnswer(query, a.id)}>
                             <HugeiconsIcon
                                 icon={Cancel01Icon}
-                                size={16}
+                                size={15}
                                 strokeWidth={1.9} />
                         </button>
                     </div>
                 </div>
 
-                <div class="mt-1 pl-8">
-                    <span class="truncate font-mono text-[11px] text-ink-500">
-                        {a.frames[0]?.video_id} · {a.frames
-                            .map((f) => f.frame_id)
-                            .join(", ")}
-                    </span>
-                    {#if query.task === "qa"}
-                        <input
-                            class="field mt-1 py-1 text-xs {(a.text?.length ??
-                                0) > MAX_ANSWER_CHARS
-                                ? 'border-bad'
-                                : ''}"
-                            placeholder="answer (≤{MAX_ANSWER_CHARS} ký tự)"
-                            bind:value={a.text}
-                            onchange={() => ws.save()} />
-                    {/if}
+                <!-- Hàng 2: ảnh. Mỗi ảnh co lại khi có nhiều frame, nhưng không phình
+                     to quá 64px khi chỉ có một - w-16 vừa là trần vừa là cỡ mặc định. -->
+                <div class="mt-1.5 flex gap-1 overflow-hidden pl-[26px]">
+                    {#each a.frames as f (f.frame_id)}
+                        <span
+                            class="ph ph-{f.keyframe_n % 8} h-10 w-16 min-w-0 shrink overflow-hidden rounded-[5px] border border-ink-800">
+                            <img
+								use:queuedImage={imageUrl(f.video_id, f.keyframe_n, 256)}
+                                alt=""
+                                loading="lazy"
+                                class="thumb size-full object-cover" />
+                        </span>
+                    {/each}
                 </div>
+
+                {#if query.task === "qa"}
+                    <input
+                        class="field mt-1.5 ml-[26px] w-[calc(100%-26px)] py-1 text-xs {(a.text
+                            ?.length ?? 0) > MAX_ANSWER_CHARS
+                            ? 'border-bad'
+                            : ''}"
+                        placeholder="answer (≤{MAX_ANSWER_CHARS} ký tự)"
+                        bind:value={a.text}
+                        onchange={() => ws.save()} />
+                {/if}
             </div>
         {:else}
             <p
@@ -185,7 +191,7 @@
                 Chưa chọn đáp án nào.
                 <br />
                 Bấm ảnh bên trái, hoặc dùng
-                <kbd class="rounded border border-ink-800 px-1">Space</kbd>
+                <kbd>Space</kbd>
                 .
             </p>
         {/each}

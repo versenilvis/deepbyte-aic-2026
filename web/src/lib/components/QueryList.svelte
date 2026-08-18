@@ -20,9 +20,9 @@
 
     const TASKS: Task[] = ["kis", "qa", "trake"];
     const taskStyle: Record<string, string> = {
-        kis: "border-task-kis/40 text-task-kis",
-        qa: "border-task-qa/40 text-task-qa",
-        trake: "border-task-trake/40 text-task-trake",
+        kis: "border-task-kis/40 bg-task-kis/7 text-task-kis",
+        qa: "border-task-qa/40 bg-task-qa/7 text-task-qa",
+        trake: "border-task-trake/40 bg-task-trake/7 text-task-trake",
     };
 
     let done = $derived(
@@ -101,15 +101,12 @@
 </script>
 
 <aside
-    class="flex shrink-0 flex-col border-r border-ink-800 bg-ink-950"
+    class="flex shrink-0 flex-col border-r border-ink-800 bg-ink-925"
     style="width: {ws.leftW}px">
     <!-- ── thêm truy vấn ─────────────────────────────────────────── -->
     <div class="border-b border-ink-800 p-2.5">
         <div class="mb-2 flex items-baseline justify-between">
-            <h2
-                class="text-xs font-semibold tracking-wide text-ink-300 uppercase">
-                Truy vấn
-            </h2>
+            <h2 class="label-xs">Truy vấn</h2>
             {#if ws.queries.length}
                 <span
                     class="tabular text-xs text-ink-500"
@@ -122,12 +119,12 @@
 
         <div class="flex gap-1.5">
             <input
-                class="field py-1.5 font-mono text-[13px]"
+                class="field h-8 py-1.5 font-mono text-[12px]"
                 placeholder="query-{nextIdx}-kis"
                 bind:value={draft}
                 onkeydown={(e) => e.key === "Enter" && add()} />
             <button
-                class="cursor-pointer btn-secondary px-2"
+                class="btn-secondary size-8 px-0"
                 onclick={add}
                 disabled={!draft.trim()}
                 title="Thêm">
@@ -139,9 +136,9 @@
         <div class="mt-1.5 flex gap-1">
             {#each TASKS as t}
                 <button
-                    class="cursor-pointer btn flex-1 border px-1 py-1 text-[11px] uppercase {taskStyle[
+                    class="btn h-[26px] flex-1 border px-1 py-1 font-mono text-[10px] tracking-[0.08em] uppercase {taskStyle[
                         t
-                    ]} hover:bg-ink-850"
+                    ]} hover:brightness-125"
                     onclick={() => quick(t)}
                     title="Thêm nhanh query-{nextIdx}-{t}">
                     {t}
@@ -150,7 +147,7 @@
         </div>
 
         <button
-            class="cursor-pointer btn-ghost mt-2 w-full justify-between px-1.5 py-1.5 text-[11px]"
+            class="btn-ghost mt-2 h-7 w-full justify-between px-2 text-[11px]"
             onclick={() => (showBulk = !showBulk)}>
             <span>Dán nhiều dòng</span>
             <HugeiconsIcon
@@ -167,7 +164,7 @@
                 bind:value={bulk}>
             </textarea>
             <button
-                class="cursor-pointer btn-primary mt-1.5 w-full py-1"
+                class="btn-primary mt-1.5 h-8 w-full py-1"
                 onclick={addBulk}
                 disabled={!bulk.trim()}>
                 Thêm {bulk.split(/[\n,]/).filter((s) => s.trim()).length} truy vấn
@@ -189,8 +186,8 @@
             <div
                 class="group flex items-center gap-1.5 border-l-2 pr-1 pl-2 transition-colors
           {active
-                    ? 'border-ink-100 bg-ink-900'
-                    : 'border-transparent hover:border-ink-700 hover:bg-ink-900/60'}">
+                    ? 'border-brand bg-ink-850'
+                    : 'border-transparent hover:border-ink-700 hover:bg-ink-900'}">
                 {#if renaming === q.id}
                     <!-- svelte-ignore a11y_autofocus -->
                     <input
@@ -212,13 +209,15 @@
                         }}
                         title="Bấm để mở · bấm đúp để đổi tên">
                         <span
-                            class="shrink-0 rounded border px-1 py-px text-[10px] font-semibold uppercase {taskStyle[
+                            class="shrink-0 rounded-[4px] border px-1.5 py-px font-mono text-[9px] font-medium tracking-[0.09em] uppercase {taskStyle[
                                 q.task
                             ]}">
                             {q.task}
                         </span>
                         <span
-                            class="min-w-0 flex-1 truncate font-mono text-xs text-ink-200">
+                            class="min-w-0 flex-1 truncate font-mono text-[11.5px] {active
+                                ? 'text-ink-50'
+                                : 'text-ink-300'}">
                             {q.id}
                         </span>
 
@@ -241,8 +240,7 @@
                         {/if}
                     </button>
 
-                    <div
-                        class="flex shrink-0 gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
+                    <div class="hidden shrink-0 gap-0.5 group-hover:flex">
                         <button
                             class="cursor-pointer rounded-md p-1.5 text-ink-400 hover:bg-ink-800 hover:text-ink-100"
                             title="Nhân bản (giữ mô tả và trọng số)"
@@ -276,7 +274,7 @@
     {#if ws.queries.length > 1}
         <div class="border-t border-ink-800 px-2.5 py-1.5">
             <button
-                class="cursor-pointer btn-ghost w-full justify-center py-1 text-[10px] hover:text-bad"
+                class="btn-ghost h-7 w-full justify-center py-1 text-[10px] hover:bg-bad/10 hover:text-bad"
                 onclick={() => {
                     if (confirm(`Xoá tất cả ${ws.queries.length} truy vấn?`))
                         [...ws.queries].forEach((q) => ws.removeQuery(q.id));

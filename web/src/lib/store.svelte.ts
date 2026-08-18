@@ -21,8 +21,8 @@ class Workspace {
 	activeId = $state<string | null>(null);
 	busy = $state(false);
 	/** Bề rộng 2 cột, kéo được. Lưu localStorage để mở lại giữ nguyên. */
-	leftW = $state(200);
-	rightW = $state(256);
+	leftW = $state(236);
+	rightW = $state(292);
 	error = $state<string | null>(null);
 
 	get active(): Query | null {

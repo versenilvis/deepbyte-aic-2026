@@ -3,7 +3,7 @@
  *
  * Vì sao cần: trình duyệt dùng HTTP/2 nên bắn cả 100 request ảnh CÙNG LÚC (HTTP/1.1
  * thì tự xếp hàng 6 cái một). Cloudflare thấy 100 request/giây từ một IP thì trả 429
- * — đo thật: 36/100 ảnh hỏng.
+ * - đo thật: 36/100 ảnh hỏng.
  *
  * Cách làm: không gán thẳng `src`, mà xếp hàng qua semaphore. Ảnh vẫn lazy-load, vẫn
  * dùng cache trình duyệt, chỉ khác là không dồn cục.
@@ -38,7 +38,11 @@ export function queuedImage(node: HTMLImageElement, url: string) {
 	function load(u: string) {
 		queue.push(() => {
 			if (cancelled) return done();
-			node.onload = () => done();
+			node.onload = () => {
+				// Hiện dần lên trên ô giữ chỗ. Trước khi có lớp này ảnh vẫn opacity 0.
+				node.classList.add('is-loaded');
+				done();
+			};
 			node.onerror = () => {
 				done();
 				// 429 do dồn cục -> thử lại một lần sau khi hàng đợi thoáng
@@ -57,6 +61,8 @@ export function queuedImage(node: HTMLImageElement, url: string) {
 	return {
 		update(u: string) {
 			retried = false;
+			// Ảnh khác -> ẩn lại, để ô giữ chỗ che trong lúc tải thay vì loé ảnh cũ.
+			node.classList.remove('is-loaded');
 			load(u);
 		},
 		destroy() {

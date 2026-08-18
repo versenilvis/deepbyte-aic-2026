@@ -1,7 +1,7 @@
 import type { Candidate, Prompt, Weights } from './types';
 
 /** Backend chạy trong Kaggle, phơi qua Cloudflare Tunnel.
- * Web ở aicdeepbyte.vercel.app, backend ở aic.verse.id.vn — hai nơi khác nhau,
+ * Web ở aicdeepbyte.vercel.app, backend ở aic.verse.id.vn - hai nơi khác nhau,
  * nên CORS phải mở (api_server đã set allow_origins=["*"]). */
 export const DEFAULT_BASE = 'https://aic.verse.id.vn';
 const KEY = 'aic.backend';
@@ -84,7 +84,7 @@ export function imageUrl(video_id: string, keyframe_n: number, w = 512): string 
  * Đổi số này mỗi khi cách CẮT clip ở backend thay đổi.
  *
  * `/clip` không gửi Cache-Control, chỉ có Last-Modified, nên trình duyệt tự suy ra
- * độ tươi và phát lại mp4 đã tải từ trước — URL cũ và mới giống hệt nhau. Bản v1 vừa
+ * độ tươi và phát lại mp4 đã tải từ trước - URL cũ và mới giống hệt nhau. Bản v1 vừa
  * lệch 1 frame (mốc tính qua pts_time làm tròn) vừa mất tiếng (`-an`), và người dùng
  * vẫn thấy đúng hai lỗi đó sau khi backend đã sửa xong.
  */

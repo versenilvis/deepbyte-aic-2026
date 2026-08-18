@@ -50,7 +50,7 @@
 	 * Mốc clip tính bằng SỐ NGUYÊN FRAME, khớp đúng backend.
 	 *
 	 * pts_time trong map-keyframes làm tròn 1 chữ số: frame 997 @25fps thật ra ở 39.88s
-	 * nhưng CSV ghi 39.9 — lệch nửa frame, đủ gây off-by-one (frame hiện 997 mà ảnh lại
+	 * nhưng CSV ghi 39.9 - lệch nửa frame, đủ gây off-by-one (frame hiện 997 mà ảnh lại
 	 * giống 998). Đi từ frame_id thì start rơi đúng biên frame.
 	 */
 	let nFrames = $derived(Math.round(seconds * fps));
@@ -83,7 +83,7 @@
 		playing ? el.pause() : el.play();
 	}
 
-	/** Chỉ bám theo video khi ĐANG PHÁT — lúc dừng thì giữ nguyên frame người dùng chọn. */
+	/** Chỉ bám theo video khi ĐANG PHÁT - lúc dừng thì giữ nguyên frame người dùng chọn. */
 	function follow() {
 		if (el && !el.paused) frame = clamp(firstFrame + el.currentTime * fps);
 	}
@@ -129,7 +129,7 @@
 <svelte:window onkeydown={onKey} />
 
 <div class="space-y-2">
-	<div class="relative overflow-hidden rounded-lg bg-ink-900">
+	<div class="relative overflow-hidden rounded-xl bg-ink-900">
 		<!-- svelte-ignore a11y_media_has_caption -->
 		<video
 			bind:this={el}
@@ -146,18 +146,18 @@
 
 		<!-- bộ đếm frame: chữ đen nền trắng, cùng tông với nút hành động chính -->
 		<div
-			class="pointer-events-none absolute top-2 left-2 rounded-md bg-ink-100 px-3 py-1.5
+			class="pointer-events-none absolute top-3 left-3 rounded-lg bg-ink-50 px-3 py-1.5
         font-mono shadow-lg"
 		>
-			<span class="tabular text-lg font-bold text-ink-950">{frame}</span>
-			<span class="tabular ml-1.5 text-[11px] text-ink-500">/ {loF}–{hiF}</span>
+			<span class="tabular text-lg font-bold tracking-[-0.02em] text-ink-950">{frame}</span>
+			<span class="tabular ml-1.5 text-[11px] text-ink-500">/ {loF}-{hiF}</span>
 		</div>
 	</div>
 
 	<!-- ── timeline có vạch chia frame ─────────────────────────── -->
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 	<div
-		class="relative h-12 cursor-pointer rounded-md border border-ink-800 bg-ink-900 select-none"
+		class="relative h-12 cursor-pointer rounded-lg border border-ink-800 bg-ink-900 select-none"
 		onpointerdown={(e) => {
 			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 			onTrack(e);
@@ -167,7 +167,7 @@
 		{#each ticks as f, i}
 			{@const pct = ((f - loF) / span) * 100}
 			<div class="pointer-events-none absolute top-0 h-full" style="left: {pct}%">
-				<div class="h-2 w-px bg-ink-700"></div>
+				<div class="h-2.5 w-px bg-ink-700"></div>
 				{#if i % 2 === 0}
 					<span
 						class="tabular absolute top-2.5 -translate-x-1/2 font-mono text-[9px] text-ink-500"
@@ -195,29 +195,29 @@
 	</div>
 
 	<div class="flex items-center gap-2">
-		<button class="btn-secondary size-11" onclick={toggle} title={playing ? 'Tạm dừng' : 'Phát'}>
+		<button class="btn-secondary size-11 rounded-[9px]" onclick={toggle} title={playing ? 'Tạm dừng' : 'Phát'}>
 			<HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} size={20} strokeWidth={2} />
 		</button>
 
 		<div class="flex gap-1">
-			<button class="btn-secondary h-11 gap-0.5 px-2.5 text-sm" onclick={() => step(-10)} title="Lùi 10 frame">
+			<button class="btn-secondary h-11 gap-0.5 rounded-[9px] px-2.5 text-sm" onclick={() => step(-10)} title="Lùi 10 frame">
 				<HugeiconsIcon icon={ArrowLeft01Icon} size={16} strokeWidth={2.4} />
 				<span class="tabular text-xs font-semibold">10</span>
 			</button>
-			<button class="btn-secondary size-11" onclick={() => step(-1)} title="Lùi 1 frame">
+			<button class="btn-secondary size-11 rounded-[9px]" onclick={() => step(-1)} title="Lùi 1 frame">
 				<HugeiconsIcon icon={ArrowLeft01Icon} size={20} strokeWidth={2.4} />
 			</button>
-			<button class="btn-secondary size-11" onclick={() => step(1)} title="Tới 1 frame">
+			<button class="btn-secondary size-11 rounded-[9px]" onclick={() => step(1)} title="Tới 1 frame">
 				<HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={2.4} />
 			</button>
-			<button class="btn-secondary h-11 gap-0.5 px-2.5 text-sm" onclick={() => step(10)} title="Tới 10 frame">
+			<button class="btn-secondary h-11 gap-0.5 rounded-[9px] px-2.5 text-sm" onclick={() => step(10)} title="Tới 10 frame">
 				<span class="tabular text-xs font-semibold">10</span>
 				<HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2.4} />
 			</button>
 		</div>
 
 		<button
-			class="btn-ghost size-11"
+			class="btn-ghost size-11 rounded-[9px]"
 			onclick={() => seekTo(frame_id)}
 			title="Về frame search trả về ({frame_id})"
 		>
@@ -230,11 +230,11 @@
 			max={hiF}
 			bind:value={frame}
 			onchange={() => seekTo(frame)}
-			class="field no-spin tabular h-11 w-24 text-center font-mono text-base font-bold"
+			class="field no-spin tabular h-11 w-24 rounded-[9px] text-center font-mono text-base font-bold"
 		/>
 
 		{#if onpick}
-			<button class="btn-primary ml-auto h-11 px-5 text-sm" onclick={() => onpick?.(frame)}>
+			<button class="btn-primary ml-auto h-11 rounded-[9px] px-5 text-[13.5px]" onclick={() => onpick?.(frame)}>
 				Chọn {frame}
 			</button>
 		{/if}
