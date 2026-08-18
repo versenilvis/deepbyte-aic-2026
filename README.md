@@ -1,3 +1,6 @@
+<img src="https://github.com/user-attachments/assets/044d4910-9013-47cf-995c-e0ace59bcd51" width="1080" alt="Login Screen" />
+<img src="https://github.com/user-attachments/assets/36e0ffa0-69d0-4bd2-b6b8-621c86729ae7" width="1080" alt="Home Screen" />
+
 # Huớng dẫn
 
 1. **Tải file [AIC_2026.ipynb](kaggle/AIC_2026.ipynb), xong mở [Kaggle](https://www.kaggle.com/)**
