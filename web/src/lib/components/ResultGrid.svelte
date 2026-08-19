@@ -5,7 +5,8 @@
         Tick02Icon,
         Image01Icon,
     } from "@hugeicons/core-free-icons";
-    import { fetchThumbs, imageUrl } from "$lib/api";
+    import { imageUrl } from "$lib/api";
+    import { thumbs } from "$lib/thumbs.svelte";
     import { ws } from "$lib/store.svelte";
     import { scrub } from "$lib/scrub.svelte";
 	import { queuedImage } from '$lib/imgqueue';
@@ -28,18 +29,19 @@
         return list.filter((c) => (seen.has(c.group!) ? false : (seen.add(c.group!), true)));
     });
 
-    let thumbs = $state<Map<string, string>>(new Map());
-
-    // Nạp TOÀN BỘ thumbnail trong MỘT request mỗi khi có kết quả mới.
-    // Cloudflare giới hạn số request/giây nên 100 ảnh rời sẽ bị 429 hàng loạt.
+    // Xếp hàng thumbnail vào kho dùng chung. Kho tự chia lô và giới hạn tần suất;
+    // ở đây chỉ nói "cần những ảnh này", không tự bắn request nào.
     $effect(() => {
-    	const list = query.candidates;
-    	if (!list.length) {
-    		thumbs = new Map();
-    		return;
-    	}
-    	fetchThumbs(list).then((m: Map<string, string>) => (thumbs = m));
+    	if (query.candidates.length) thumbs.want(query.candidates);
     });
+
+    /** Ảnh của một ô, hoặc null khi chưa có. Null -> chỉ hiện ô giữ chỗ, KHÔNG gọi mạng. */
+    function src(c: Candidate): string | null {
+        return (
+            thumbs.get(c.video_id, c.keyframe_n) ??
+            (thumbs.legacy ? imageUrl(c.video_id, c.keyframe_n) : null)
+        );
+    }
 
     /** TRAKE: các candidate cùng `group` hợp thành MỘT đáp án, đúng thứ tự action. */
     function groupOf(c: Candidate): Candidate[] {
@@ -187,12 +189,19 @@
                             onzoom(groupOf(c));
                         }}
                         title="Bấm để xem to">
-                        <img
-							use:queuedImage={thumbs.get(c.video_id + '-' + c.keyframe_n) ?? imageUrl(c.video_id, c.keyframe_n)}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            class="thumb aspect-video w-full object-cover transition-transform duration-200 ease-out group-hover:scale-[1.04]" />
+                        <!-- CHƯA có ảnh thì KHÔNG dựng <img>. Bản cũ rơi về /image ngay lúc
+                             batch còn đang bay -> 101 request một lúc -> rate limiter giết
+                             luôn cả batch. Ô giữ chỗ .ph-N lo phần hình trong lúc chờ. -->
+                        {#if src(c)}
+                            <img
+								use:queuedImage={src(c)!}
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                                class="thumb aspect-video w-full object-cover transition-transform duration-200 ease-out group-hover:scale-[1.04]" />
+                        {:else}
+                            <div class="aspect-video w-full"></div>
+                        {/if}
                     </button>
 
                     <!-- thứ hạng, nếu đã chọn -->

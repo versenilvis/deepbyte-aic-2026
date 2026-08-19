@@ -7,6 +7,7 @@
         Alert02Icon,
     } from "@hugeicons/core-free-icons";
     import { imageUrl } from "$lib/api";
+    import { thumbs } from "$lib/thumbs.svelte";
     import { ws } from "$lib/store.svelte";
 	import { queuedImage } from '$lib/imgqueue';
     import {
@@ -18,6 +19,22 @@
     } from "$lib/types";
 
     let { query }: { query: Query } = $props();
+
+    // Ảnh của đáp án đi chung kho với lưới kết quả: cùng cỡ w=384 nên phần lớn đã
+    // nằm sẵn trong cache từ lúc tìm kiếm. Nạp workspace 100 đáp án cũng chỉ tốn vài
+    // request chia lô, thay vì 100 request lẻ bị 429 gần một nửa.
+    $effect(() => {
+        const frames = query.answers.flatMap((a) => a.frames);
+        if (frames.length) thumbs.want(frames);
+    });
+
+    /** Ảnh của một frame, hoặc null khi chưa có. Null -> chỉ hiện ô giữ chỗ. */
+    function src(f: { video_id: string; keyframe_n: number }): string | null {
+        return (
+            thumbs.get(f.video_id, f.keyframe_n) ??
+            (thumbs.legacy ? imageUrl(f.video_id, f.keyframe_n, 256) : null)
+        );
+    }
 
     let dragFrom = $state<number | null>(null);
     let over = $state<number | null>(null);
@@ -165,11 +182,13 @@
                     {#each a.frames as f (f.frame_id)}
                         <span
                             class="ph ph-{f.keyframe_n % 8} h-10 w-16 min-w-0 shrink overflow-hidden rounded-[5px] border border-ink-800">
-                            <img
-								use:queuedImage={imageUrl(f.video_id, f.keyframe_n, 256)}
-                                alt=""
-                                loading="lazy"
-                                class="thumb size-full object-cover" />
+                            {#if src(f)}
+                                <img
+									use:queuedImage={src(f)!}
+                                    alt=""
+                                    loading="lazy"
+                                    class="thumb size-full object-cover" />
+                            {/if}
                         </span>
                     {/each}
                 </div>

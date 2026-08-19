@@ -93,32 +93,3 @@ const CLIP_V = 2;
 export function clipUrl(video_id: string, frame_id: number, seconds = 5): string {
 	return `${getBase()}/clip?video_id=${video_id}&frame_id=${frame_id}&seconds=${seconds}&v=${CLIP_V}&key=${encodeURIComponent(getKey())}`;
 }
-
-
-/**
- * Lấy NHIỀU thumbnail trong MỘT request.
- *
- * Cloudflare giới hạn số request mỗi giây: lưới 100 ảnh = 100 request -> đo thật
- * 36-47% bị 429, kể cả khi chỉ chạy 6 request song song (đây là giới hạn TẦN SUẤT,
- * không phải đồng thời). Gộp lại thì chỉ tốn 1 request.
- *
- * Backend cũ chưa có /thumbs -> trả về map rỗng, phía gọi tự rơi về <img src>.
- */
-export async function fetchThumbs(
-	items: { video_id: string; keyframe_n: number }[],
-	w = 384
-): Promise<Map<string, string>> {
-	const out = new Map<string, string>();
-	if (!items.length) return out;
-	try {
-		const r = await req<{ thumbs: Record<string, string> }>('/thumbs', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ items: items.map((i) => [i.video_id, i.keyframe_n]), w })
-		});
-		for (const [k, b64] of Object.entries(r.thumbs)) out.set(k, 'data:image/jpeg;base64,' + b64);
-	} catch {
-		/* backend cũ hoặc lỗi mạng -> để phía gọi dùng <img src> như trước */
-	}
-	return out;
-}
