@@ -61,6 +61,10 @@
 	let hiF = $derived(Math.min(lastFrame, max ?? lastFrame));
 	let span = $derived(Math.max(1, hiF - loF));
 
+	/* Đặt số đếm về frame trung tâm. Việc TUA video do `onloadedmetadata` lo: lúc
+	   effect này chạy thì <video> chưa có metadata nên gán currentTime là vô hiệu.
+	   Thiếu cú tua đó thì số đếm ghi frame trung tâm còn hình vẫn đứng ở frame ĐẦU
+	   clip - lệch tới nửa clip (62 frame ở clip 5s @25fps), đủ để nộp sai. */
 	$effect(() => {
 		frame = Math.min(hiF, Math.max(loF, frame_id));
 	});
@@ -137,6 +141,7 @@
 			class="max-h-[52vh] w-full object-contain"
 			preload="auto"
 			controls={false}
+			onloadedmetadata={() => seekTo(frame_id)}
 			ontimeupdate={follow}
 			onseeked={follow}
 			onplay={() => (playing = true)}
