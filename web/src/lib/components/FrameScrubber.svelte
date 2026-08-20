@@ -7,7 +7,7 @@
 		ArrowRight01Icon,
 		Target02Icon
 	} from '@hugeicons/core-free-icons';
-	import { clipUrl } from '$lib/api';
+	import { clipUrl, imageUrl } from '$lib/api';
 	import { scrub } from '$lib/scrub.svelte';
 
 	/**
@@ -24,6 +24,7 @@
 	let {
 		video_id,
 		frame_id,
+		keyframe_n,
 		pts_time,
 		fps,
 		seconds = 5,
@@ -33,6 +34,8 @@
 	}: {
 		video_id: string;
 		frame_id: number;
+		/** Keyframe BTC ứng với `frame_id`, dùng làm ảnh phủ lúc video chưa tua xong. */
+		keyframe_n: number;
 		pts_time: number;
 		fps: number;
 		seconds?: number;
@@ -45,6 +48,8 @@
 	let el = $state<HTMLVideoElement | null>(null);
 	let playing = $state(false);
 	let frame = $state(0);
+	/** Video đã tua tới frame trung tâm chưa. Chưa xong thì che bằng ảnh keyframe. */
+	let ready = $state(false);
 
 	/**
 	 * Mốc clip tính bằng SỐ NGUYÊN FRAME, khớp đúng backend.
@@ -67,6 +72,8 @@
 	   clip - lệch tới nửa clip (62 frame ở clip 5s @25fps), đủ để nộp sai. */
 	$effect(() => {
 		frame = Math.min(hiF, Math.max(loF, frame_id));
+		// Đổi clip -> che lại cho tới khi tua xong lần nữa.
+		ready = false;
 	});
 
 	const clamp = (f: number) => Math.min(hiF, Math.max(loF, Math.round(f)));
@@ -138,16 +145,31 @@
 		<video
 			bind:this={el}
 			src={clipUrl(video_id, frame_id, seconds)}
-			class="max-h-[52vh] w-full object-contain"
+			class="max-h-[52vh] w-full object-contain transition-opacity duration-150"
+			class:opacity-0={!ready}
 			preload="auto"
 			controls={false}
 			onloadedmetadata={() => seekTo(frame_id)}
 			ontimeupdate={follow}
-			onseeked={follow}
+			onseeked={() => {
+				ready = true;
+				follow();
+			}}
 			onplay={() => (playing = true)}
 			onpause={() => (playing = false)}
 			onclick={toggle}
 		></video>
+
+		<!-- Ảnh keyframe phủ lên tới khi video tua xong.
+		     Không có lớp này thì <video> vẽ frame ĐẦU clip trước rồi mới nhảy - người
+		     xem thấy một khung sai chớp qua, mà bộ đếm đã ghi frame trung tâm. -->
+		{#if !ready}
+			<img
+				src={imageUrl(video_id, keyframe_n, 1280)}
+				alt=""
+				class="pointer-events-none absolute inset-0 max-h-[52vh] w-full object-contain"
+			/>
+		{/if}
 
 		<!-- bộ đếm frame: chữ đen nền trắng, cùng tông với nút hành động chính -->
 		<div

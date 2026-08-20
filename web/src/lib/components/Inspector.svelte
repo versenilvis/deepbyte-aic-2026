@@ -88,6 +88,7 @@
 				<FrameScrubber
 					video_id={cur.video_id}
 					frame_id={cur.frame_id}
+					keyframe_n={cur.keyframe_n}
 					pts_time={cur.pts_time}
 					fps={cur.fps ?? 25}
 					min={lo}
