@@ -2,15 +2,9 @@
     import { onMount } from "svelte";
     import { HugeiconsIcon } from "@hugeicons/svelte";
     import {
-        ArrowLeft01Icon,
-        ArrowRight01Icon,
         Cancel01Icon,
-        Download01Icon,
-        Image01Icon,
-        Key01Icon,
-        Link01Icon,
-        Upload01Icon,
-        Video01Icon,
+        Search01Icon,
+        Target02Icon,
     } from "@hugeicons/core-free-icons";
     import {
         DEFAULT_BASE,
@@ -36,6 +30,7 @@
     import Resizer from "$lib/components/Resizer.svelte";
     import ResultGrid from "$lib/components/ResultGrid.svelte";
     import SearchPanel from "$lib/components/SearchPanel.svelte";
+    import FrameJump from "$lib/components/FrameJump.svelte";
 
     let authed = $state(false);
     let hp = $state<Health | null>(null);
@@ -47,6 +42,7 @@
     let showExportModal = $state(false);
     let zoom = $state<Candidate[] | null>(null);
     let showClip = $state(false);
+    let activeTab = $state<"search" | "jump">("search");
 
     onMount(async () => {
         ws.load();
@@ -327,9 +323,49 @@
             <main class="flex min-w-0 flex-1 flex-col bg-ink-950">
                 {#if ws.active}
                     <SearchPanel query={ws.active} />
-                    <ResultGrid
-                        query={ws.active}
-                        onzoom={(g) => (zoom = g)} />
+                    <!-- dải tab chuyển đổi giữa kết quả tìm kiếm và nhảy tới frame thủ công -->
+                    <div class="flex items-center gap-1 border-b border-ink-800 bg-ink-900/60 px-4">
+                        <button
+                            class="flex h-9.5 items-center gap-2 border-b-2 px-3 text-xs font-medium transition-colors {activeTab ===
+                            'search'
+                                ? 'border-brand font-semibold text-ink-50'
+                                : 'border-transparent text-ink-400 hover:text-ink-200'}"
+                            onclick={() => (activeTab = "search")}>
+                            <HugeiconsIcon
+                                icon={Search01Icon}
+                                size={14}
+                                strokeWidth={1.8} />
+                            <span>Kết quả tìm kiếm</span>
+                            {#if ws.active.candidates.length}
+                                <span
+                                    class="tabular rounded-full bg-ink-800 px-1.5 py-0.5 font-mono text-[10px] text-ink-400">
+                                    {ws.active.candidates.length}
+                                </span>
+                            {/if}
+                        </button>
+                        <button
+                            class="flex h-9.5 items-center gap-2 border-b-2 px-3 text-xs font-medium transition-colors {activeTab ===
+                            'jump'
+                                ? 'border-brand font-semibold text-ink-50'
+                                : 'border-transparent text-ink-400 hover:text-ink-200'}"
+                            onclick={() => (activeTab = "jump")}>
+                            <HugeiconsIcon
+                                icon={Target02Icon}
+                                size={14}
+                                strokeWidth={1.8} />
+                            <span>Nhảy tới frame</span>
+                        </button>
+                    </div>
+
+                    {#if activeTab === "search"}
+                        <ResultGrid
+                            query={ws.active}
+                            onzoom={(g) => (zoom = g)} />
+                    {:else}
+                        <FrameJump
+                            query={ws.active}
+                            onzoom={(g) => (zoom = g)} />
+                    {/if}
                 {:else}
                     <div
                         class="flex flex-1 flex-col items-center justify-center gap-5 p-8 text-center">

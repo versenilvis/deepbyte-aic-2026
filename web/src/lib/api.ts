@@ -93,3 +93,25 @@ const CLIP_V = 2;
 export function clipUrl(video_id: string, frame_id: number, seconds = 5): string {
 	return `${getBase()}/clip?video_id=${video_id}&frame_id=${frame_id}&seconds=${seconds}&v=${CLIP_V}&key=${encodeURIComponent(getKey())}`;
 }
+
+export interface ClipInfo {
+	video_id: string;
+	fps: number;
+	center_frame: number;
+	n?: number;
+	pts_time?: number;
+	gap?: number;
+	start_sec: number;
+	seconds: number;
+	first_frame: number;
+	last_frame: number;
+	n_frames: number;
+}
+
+/**
+ * Tra cứu thông tin keyframe gần nhất và cửa sổ clip quanh một frame bất kỳ
+ */
+export function clipInfo(video_id: string, frame_id: number, seconds = 5): Promise<ClipInfo> {
+	return req<ClipInfo>(`/clipinfo?video_id=${encodeURIComponent(video_id)}&frame_id=${frame_id}&seconds=${seconds}`);
+}
+
