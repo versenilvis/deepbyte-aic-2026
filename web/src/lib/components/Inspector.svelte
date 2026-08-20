@@ -136,6 +136,22 @@
 					{/if}
 				</div>
 
+				<!-- Phân rã điểm theo tín hiệu. Đây mới là phần đáng đọc: con số tổng chỉ
+				     nói ô này xếp trên ô kia, còn phân rã nói ô này lên cao NHỜ ĐÂU.
+				     Một ô đứng đầu mà chỉ có ocr_bm25 cao là dấu hiệu truy vấn bị chữ
+				     kéo lệch - đúng kiểu lỗi đã đẩy 93 ô quảng cáo lên đầu. -->
+				{#if cur.parts}
+					<div class="flex flex-wrap gap-1.5 text-[11px]">
+						{#each Object.entries(cur.parts) as [k, v]}
+							<span
+								class="tabular rounded-md border border-ink-800 px-1.5 py-0.5 font-mono
+								{v >= 0.5 ? 'text-ink-100' : 'text-ink-500'}">
+								{k} {v.toFixed(3)}
+							</span>
+						{/each}
+					</div>
+				{/if}
+
 				{#if cur.caption}<p class="leading-relaxed text-ink-300"><span class="text-ink-500">caption</span> {cur.caption}</p>{/if}
 				{#if cur.speech}<p class="leading-relaxed text-ink-300"><span class="text-ink-500">speech</span> {cur.speech}</p>{/if}
 				{#if cur.ocr}<p class="leading-relaxed text-ink-300"><span class="text-ink-500">ocr</span> {cur.ocr}</p>{/if}
