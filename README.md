@@ -22,7 +22,7 @@
     - Chọn file vừa tải
 
 2. **Download 2 datasets này rồi bấm `Add Input`, thêm 2 datasets này:**
-   - [verse91/json-npy](https://www.kaggle.com/datasets/verse91/json-npy) - feature BGE-M3
+   - [cbg6682/npy-json](https://www.kaggle.com/datasets/cbg6682/npy-json) - feature BGE-M3
    -  [huhongnguyn111/dataset-aic](https://www.kaggle.com/datasets/huhongnguyn111/dataset-aic) (clip-features, map-keyframes, Keyframes, Videos)
 3. Thêm các secret keys cần thiết (`Add-ons` > `Secrets`)
    - `GOOGLE_API_KEY` - cho LLM tách prompt
