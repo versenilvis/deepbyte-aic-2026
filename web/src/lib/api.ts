@@ -115,3 +115,24 @@ export function clipInfo(video_id: string, frame_id: number, seconds = 5): Promi
 	return req<ClipInfo>(`/clipinfo?video_id=${encodeURIComponent(video_id)}&frame_id=${frame_id}&seconds=${seconds}`);
 }
 
+export interface Keyframe {
+	n: number;
+	frame_id: number;
+	pts_time: number;
+}
+
+/**
+ * Danh sách keyframe THẬT của một video.
+ *
+ * Bắt buộc phải hỏi backend chứ không được tự suy: khoảng cách giữa hai keyframe
+ * KHÔNG đều. L30_V078 có n=31 -> 1848, n=32 -> 1893, n=33 -> 1917, tức 45 rồi 24
+ * frame chứ không phải fps=25. Suy frame_id bằng cách cộng dồn fps thì ảnh (lấy
+ * theo n) và clip (lấy theo frame_id) sẽ trỏ vào hai cảnh khác nhau.
+ */
+export function keyframes(
+	video_id: string,
+	n_from = 1,
+	n_to = 0
+): Promise<{ video_id: string; fps: number; count: number; keyframes: Keyframe[] }> {
+	return req(`/keyframes?video_id=${encodeURIComponent(video_id)}&n_from=${n_from}&n_to=${n_to}`);
+}

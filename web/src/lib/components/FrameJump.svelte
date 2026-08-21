@@ -8,7 +8,7 @@
 		Target02Icon,
 		Tick02Icon
 	} from '@hugeicons/core-free-icons';
-	import { clipInfo, imageUrl, type ClipInfo } from '$lib/api';
+	import { clipInfo, imageUrl, keyframes, type ClipInfo, type Keyframe } from '$lib/api';
 	import { thumbs } from '$lib/thumbs.svelte';
 	import { ws } from '$lib/store.svelte';
 	import { scrub } from '$lib/scrub.svelte';
@@ -25,6 +25,8 @@
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 	let info = $state<ClipInfo | null>(null);
+	/** Keyframe THẬT quanh mốc tâm, lấy từ backend. Không được tự suy ra, xem jump(). */
+	let kfWindow = $state<Keyframe[]>([]);
 	let searchedFrameId = $state<number | null>(null);
 
 	let cols = $state(5);
@@ -33,34 +35,29 @@
 	let grid = $state<HTMLDivElement | null>(null);
 
 	// tạo dải 25 keyframe quanh mốc tâm để người dùng rà soát bằng mắt
+	/**
+	 * Dải keyframe quanh mốc tâm, dựng từ dữ liệu THẬT của backend.
+	 *
+	 * Bản đầu suy frame_id bằng `center_frame + delta * fps`, tức giả định hai
+	 * keyframe cách nhau đúng 1 giây. Sai: L30_V078 có n=31 -> 1848, n=32 -> 1893,
+	 * n=33 -> 1917, tức 45 rồi 24 frame. Hậu quả là thumbnail (lấy theo n) và clip
+	 * (lấy theo frame_id) trỏ vào hai cảnh khác nhau, càng xa tâm càng lệch.
+	 */
 	let candidates = $derived.by<Candidate[]>(() => {
-		if (!info || info.n == null) return [];
-		const centerN = info.n;
-		const minN = Math.max(1, centerN - 12);
-		const maxN = centerN + 12;
+		if (!info || info.n == null || !kfWindow.length) return [];
 		const fps = info.fps || 25;
-
-		const list: Candidate[] = [];
-		for (let k = minN; k <= maxN; k++) {
-			const isCenter = k === centerN;
-			const delta = k - centerN;
-			const frameId = isCenter ? info.center_frame : Math.round(info.center_frame + delta * fps);
-			const pts = info.pts_time != null ? Math.max(0, info.pts_time + delta) : frameId / fps;
-
-			list.push({
-				rank: 0,
-				video_id: info.video_id,
-				frame_id: frameId,
-				keyframe_n: k,
-				pts_time: pts,
-				fps,
-				image: `/image?video_id=${info.video_id}&n=${k}`,
-				caption: '',
-				speech: '',
-				ocr: ''
-			});
-		}
-		return list;
+		return kfWindow.map((kf) => ({
+			rank: 0,
+			video_id: info!.video_id,
+			frame_id: kf.frame_id,
+			keyframe_n: kf.n,
+			pts_time: kf.pts_time,
+			fps,
+			image: `/image?video_id=${info!.video_id}&n=${kf.n}`,
+			caption: '',
+			speech: '',
+			ocr: ''
+		}));
 	});
 
 	// gửi trước danh sách thumbnail vào kho chia lô để tránh dồn dập request
@@ -96,6 +93,7 @@
 		busy = true;
 		error = null;
 		info = null;
+		kfWindow = [];
 
 		try {
 			const res = await clipInfo(vid, fid, 5);
@@ -103,12 +101,16 @@
 				error = 'Backend chưa hỗ trợ, cần chạy lại cell api_server trên Kaggle';
 				return;
 			}
-			info = res;
-			searchedFrameId = fid;
-			// đưa con trỏ bàn phím tới đúng ô trung tâm
 			const centerN = res.n;
 			const minN = Math.max(1, centerN - 12);
-			cursor = centerN - minN;
+			// Hỏi backend frame_id thật của từng keyframe trong dải. Bắt buộc, vì
+			// khoảng cách giữa hai keyframe không đều nên không suy ra được.
+			const kf = await keyframes(vid, minN, centerN + 12);
+			info = res;
+			kfWindow = kf.keyframes;
+			searchedFrameId = fid;
+			// đưa con trỏ bàn phím tới đúng ô trung tâm
+			cursor = Math.max(0, kf.keyframes.findIndex((k) => k.n === centerN));
 		} catch (e) {
 			error = (e as Error).message || 'Không tìm thấy video hoặc lỗi kết nối';
 		} finally {
