@@ -78,6 +78,13 @@
 
 	const clamp = (f: number) => Math.min(hiF, Math.max(loF, Math.round(f)));
 
+	/** Giây -> "m:ss.ss", để khỏi phải nhẩm chia 60 khi đối chiếu với trình phát. */
+	function mmss(sec: number): string {
+		const m = Math.floor(sec / 60);
+		const r = sec - m * 60;
+		return `${m}:${r.toFixed(2).padStart(5, '0')}`;
+	}
+
 	function seekTo(f: number) {
 		const t = clamp(f);
 		frame = t;
@@ -268,7 +275,7 @@
 	</div>
 
 	<p class="text-[11px] text-ink-500">
-		Clip từ giây {startSec.toFixed(2)} · {fps}fps · {seconds}s = {hiF - loF + 1} frame.
+		Clip từ {mmss(startSec)} ({startSec.toFixed(2)}s) · {fps}fps · {seconds}s = {hiF - loF + 1} frame.
 		<kbd>←</kbd> <kbd>→</kbd> đi 1 frame · <kbd>Shift</kbd>+mũi tên đi 10 · <kbd>Space</kbd> phát/dừng.
 	</p>
 </div>

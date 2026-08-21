@@ -25,6 +25,13 @@
 		onpick?: (frames: number[]) => void;
 	} = $props();
 
+	/** Giây -> "m:ss.s". Đọc "2:58.2" nhanh hơn "178.2s" khi đối chiếu với trình phát. */
+	function mmss(sec: number): string {
+		const m = Math.floor(sec / 60);
+		const r = sec - m * 60;
+		return `${m}:${r.toFixed(1).padStart(4, '0')}`;
+	}
+
 	let active = $state(0);
 	let mode = $state<'image' | 'video'>('image');
 	/** frame đang chọn cho từng action, khởi tạo từ kết quả search. */
@@ -111,7 +118,7 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<span class="font-mono text-ink-200">
 						{cur.video_id} · frame <span class="tabular font-bold text-rank-1">{picked[active] ?? cur.frame_id}</span>
-						· {cur.pts_time.toFixed(1)}s · {cur.fps ?? 25}fps
+						· {mmss(cur.pts_time)} · {cur.pts_time.toFixed(1)}s · {cur.fps ?? 25}fps
 					</span>
 
 					<button class="btn-secondary h-8 px-3" onclick={() => (mode = mode === 'video' ? 'image' : 'video')}>

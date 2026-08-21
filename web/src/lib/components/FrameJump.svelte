@@ -22,6 +22,10 @@
 
 	let videoId = $state('');
 	let frameInput = $state<number | string>('');
+	/** 'frame' = gõ thẳng số frame; 'time' = gõ phút + giây. */
+	let mode = $state<'frame' | 'time'>('frame');
+	let minInput = $state<number | string>('');
+	let secInput = $state<number | string>('');
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 	let info = $state<ClipInfo | null>(null);
@@ -85,10 +89,29 @@
 		else ws.addAnswer(query, c);
 	}
 
+	/** Giây -> "m:ss.s". Đọc "3:14.0" nhanh hơn nhiều so với "194.0s". */
+	function mmss(sec: number): string {
+		const m = Math.floor(sec / 60);
+		const r = sec - m * 60;
+		return `${m}:${r.toFixed(1).padStart(4, '0')}`;
+	}
+
+	const num = (v: number | string) => {
+		const n = typeof v === 'number' ? v : parseFloat(String(v).trim());
+		return isNaN(n) ? 0 : n;
+	};
+
+	/** Tổng số giây người dùng gõ ở chế độ thời gian. */
+	let totalSec = $derived(num(minInput) * 60 + num(secInput));
+
+	let canJump = $derived.by(() => {
+		if (!videoId.trim()) return false;
+		if (mode === 'time') return minInput !== '' || secInput !== '';
+		return frameInput !== '' && frameInput !== null && frameInput !== undefined;
+	});
+
 	async function jump() {
 		const vid = videoId.trim();
-		const fid = typeof frameInput === 'number' ? frameInput : parseInt(String(frameInput).trim(), 10);
-		if (!vid || isNaN(fid)) return;
 
 		busy = true;
 		error = null;
@@ -96,6 +119,22 @@
 		kfWindow = [];
 
 		try {
+			let fid: number;
+			if (mode === 'time') {
+				// Cần fps TRƯỚC khi quy đổi được giây sang frame, mà fps thì mỗi video
+				// một khác (đã gặp cả 25 lẫn 30). Hỏi một keyframe là đủ, rẻ hơn nhiều
+				// so với đoán 25 rồi nhảy sai chỗ.
+				const probe = await keyframes(vid, 1, 1);
+				fid = Math.round(totalSec * (probe.fps || 25));
+			} else {
+				fid = typeof frameInput === 'number'
+					? frameInput
+					: parseInt(String(frameInput).trim(), 10);
+			}
+			if (isNaN(fid)) {
+				error = 'Số không hợp lệ';
+				return;
+			}
 			const res = await clipInfo(vid, fid, 5);
 			if (res.n === undefined || res.n === null) {
 				error = 'Backend chưa hỗ trợ, cần chạy lại cell api_server trên Kaggle';
@@ -168,18 +207,59 @@
 			class="field h-8 w-44 font-mono text-xs"
 		/>
 
-		<input
-			type="number"
-			placeholder="Số frame (vd: 1850)"
-			bind:value={frameInput}
-			onkeydown={(e) => e.key === 'Enter' && jump()}
-			class="field no-spin h-8 w-36 font-mono text-xs"
-		/>
+		<!-- Chọn cách chỉ mốc: số frame hoặc thời gian.
+		     Có ô phút riêng vì đọc đề hay ra "phút thứ 3" mà tự nhân 3x60x25 trong đầu
+		     thì vừa chậm vừa dễ sai một con số. -->
+		<div class="flex overflow-hidden rounded-lg border border-ink-800">
+			{#each [['frame', 'frame'], ['time', 'thời gian']] as [m, label] (m)}
+				<button
+					class="cursor-pointer px-2.5 py-1 text-[11px] transition-colors
+					{mode === m ? 'bg-brand text-ink-950' : 'bg-ink-825 text-ink-400 hover:text-ink-200'}"
+					onclick={() => (mode = m as 'frame' | 'time')}
+				>
+					{label}
+				</button>
+			{/each}
+		</div>
+
+		{#if mode === 'frame'}
+			<input
+				type="number"
+				placeholder="Số frame (vd: 1850)"
+				bind:value={frameInput}
+				onkeydown={(e) => e.key === 'Enter' && jump()}
+				class="field no-spin h-8 w-36 font-mono text-xs"
+			/>
+		{:else}
+			<div class="flex items-center gap-1">
+				<input
+					type="number"
+					min="0"
+					placeholder="phút"
+					bind:value={minInput}
+					onkeydown={(e) => e.key === 'Enter' && jump()}
+					class="field no-spin h-8 w-16 font-mono text-xs"
+				/>
+				<span class="font-mono text-xs text-ink-500">:</span>
+				<input
+					type="number"
+					min="0"
+					step="0.1"
+					placeholder="giây"
+					bind:value={secInput}
+					onkeydown={(e) => e.key === 'Enter' && jump()}
+					class="field no-spin h-8 w-20 font-mono text-xs"
+				/>
+				<span class="tabular ml-1 font-mono text-[11px] text-ink-500">
+					= {totalSec.toFixed(1)}s
+				</span>
+			</div>
+		{/if}
 
 		<button
 			class="btn-primary h-8 px-3.5 text-xs"
 			onclick={jump}
-			disabled={busy || !videoId.trim() || frameInput === '' || frameInput === null || frameInput === undefined}
+			disabled={busy || !canJump}
 		>
 			{#if busy}
 				<svg class="size-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -237,12 +317,27 @@
 			<HugeiconsIcon icon={Cancel01Icon} size={13} strokeWidth={1.9} />
 		</button>
 	</div>
-{:else if info && info.gap !== undefined && info.gap !== 0}
-	<div class="flex items-center gap-2 border-b border-warn/30 bg-warn/10 px-4 py-2 text-xs text-warn">
-		<HugeiconsIcon icon={Alert02Icon} size={14} strokeWidth={2} class="shrink-0" />
-		<span>
-			Đã bắt về keyframe gần nhất <strong class="font-mono">{info.center_frame}</strong>, bạn gõ <strong class="font-mono">{searchedFrameId}</strong> (lệch {Math.abs(info.gap)} frame).
-		</span>
+{:else if info}
+	<!-- Luôn hiện mốc tâm, không chỉ hiện khi lệch: người dùng cần đọc lại được
+	     frame và thời gian của ô giữa để đối chiếu với đề bài. -->
+	<div
+		class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 text-xs
+		{info.gap ? 'border-warn/30 bg-warn/10 text-warn' : 'border-ink-800 bg-ink-900/40 text-ink-400'}">
+		{#if info.gap}
+			<span class="flex items-center gap-2">
+				<HugeiconsIcon icon={Alert02Icon} size={14} strokeWidth={2} class="shrink-0" />
+				Đã bắt về keyframe gần nhất <strong class="font-mono">{info.center_frame}</strong>,
+				bạn gõ <strong class="font-mono">{searchedFrameId}</strong>
+				(lệch {Math.abs(info.gap)} frame)
+			</span>
+		{:else}
+			<span>Đúng keyframe <strong class="font-mono">{info.center_frame}</strong></span>
+		{/if}
+		{#if info.pts_time != null}
+			<span class="tabular font-mono">
+				{mmss(info.pts_time)} · {info.pts_time.toFixed(2)}s · {info.fps}fps
+			</span>
+		{/if}
 	</div>
 {/if}
 
