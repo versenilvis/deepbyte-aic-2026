@@ -191,20 +191,6 @@ export const wsPut = (hub: string, name: string, body: string) =>
 		body
 	});
 
-/** Tên người dùng - nhớ giữa các phiên để khỏi gõ lại. */
-const WHO = 'aic.who';
-
-/** Bốn máy của đội. Điền sẵn để không ai phải gõ địa chỉ của ba người còn lại. */
-export const TEAM: { host: string; name: string }[] = [
-	{ host: 'https://aic.verse.id.vn', name: 'nth' },
-	{ host: 'https://htp.verse.id.vn', name: 'htp' },
-	{ host: 'https://lmh.verse.id.vn', name: 'lmh' },
-	{ host: 'https://nhh.verse.id.vn', name: 'nhh' }
-];
-
-/** Tên người dùng - nhớ giữa các phiên để khỏi gõ lại. */
-const WHO = 'aic.who';
-
 /** Bốn máy của đội. Điền sẵn để không ai phải gõ địa chỉ của ba người còn lại. */
 export const TEAM: { host: string; name: string }[] = [
 	{ host: 'https://aic.verse.id.vn', name: 'nth' },
@@ -216,7 +202,3 @@ export const TEAM: { host: string; name: string }[] = [
 /** Tên mặc định của một máy, để bấm chọn máy mình là tên tự điền. */
 export const nameOfHub = (host: string) =>
 	TEAM.find((t) => t.host === host.trim().replace(/\/+$/, ''))?.name ?? '';
-
-export const getWho = () =>
-	typeof localStorage === 'undefined' ? '' : localStorage.getItem(WHO) || '';
-export const setWho = (v: string) => localStorage.setItem(WHO, v.trim());

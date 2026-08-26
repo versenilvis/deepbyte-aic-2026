@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Cancel01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
-	import { TEAM, getWho, setWho, wsGet, wsList, wsPut, type WsItem } from '$lib/api';
+	import { TEAM, wsGet, wsList, wsPut, type WsItem } from '$lib/api';
 	import { ws } from '$lib/store.svelte';
 
 	interface Props {
@@ -13,12 +13,12 @@
 	let { onpull, onclose }: Props = $props();
 
 	/** Một dòng = một máy trong đội. Luôn hiện đủ, kể cả máy chưa bật. */
-	type Row = { host: string; who: string; item: WsItem | null; why: string; extra: number };
+	/** `alive` = hỏi được máy. Khác `item != null` = máy đã có bài. Máy sống nhưng
+	 *  rỗng thì vẫn ĐẨY LÊN được, chỉ là chưa LẤY VỀ được. */
+	type Row = { host: string; who: string; item: WsItem | null; why: string; extra: number; alive: boolean };
 
-	let pushTo = $state(TEAM[0].host);
-	let who = $state(getWho() || TEAM[0].name);
 	let rows = $state<Row[]>(
-		TEAM.map((t) => ({ host: t.host, who: t.name, item: null, why: 'đang hỏi...', extra: 0 }))
+		TEAM.map((t) => ({ host: t.host, who: t.name, item: null, why: 'đang hỏi...', extra: 0, alive: false }))
 	);
 	let busy = $state(false);
 	let msg = $state<string | null>(null);
@@ -48,7 +48,7 @@
 			if (r.status !== 'fulfilled') {
 				const m = String((r.reason as Error)?.message ?? '');
 				return {
-					host: t.host, who: t.name, item: null, extra: 0,
+					host: t.host, who: t.name, item: null, extra: 0, alive: false,
 					why: /key/i.test(m) ? 'sai key' : /5\d\d/.test(m) ? 'máy chưa bật' : 'không kết nối được'
 				};
 			}
@@ -56,7 +56,7 @@
 			const sorted = [...r.value.items].sort((a, b) => b.saved_at - a.saved_at);
 			const newest = sorted[0] ?? null;
 			return {
-				host: t.host, who: t.name, item: newest,
+				host: t.host, who: t.name, item: newest, alive: true,
 				why: newest ? '' : 'chưa đẩy bài',
 				extra: Math.max(0, sorted.length - 1)
 			};
@@ -64,20 +64,21 @@
 		busy = false;
 	}
 
-	async function push() {
-		const name = who.trim();
-		if (!name) return (err = 'Nhập tên của bạn trước - nó là tên bản trên máy.');
-
-		const old = rows.find((r) => r.host === pushTo)?.item;
-		if (old && old.name === name) {
-			// Cùng tên -> ghi đè. Có thể là bản của người khác nên phải hỏi.
-			if (!confirm(`Trên ${short(pushTo)} đã có bản tên "${name}" (lưu lúc ${fmtWhen(old.saved_at)}).\n\nĐẩy lên sẽ ĐÈ MẤT bản đó.\n\nVẫn đẩy?`))
+	/**
+	 * Đẩy workspace của mình lên MỘT máy, lấy luôn tên đội của máy đó làm tên bản.
+	 *
+	 * Không có ô "tên của bạn" nữa: mỗi máy đã gắn sẵn một người, nên tên suy ra
+	 * được. Bớt một ô phải điền và bớt luôn cả lớp lỗi gõ nhầm tên người khác.
+	 */
+	async function push(r: Row) {
+		const old = r.item;
+		if (old && old.name === r.who) {
+			if (!confirm(`Trên ${short(r.host)} đã có bản tên "${r.who}" (lưu lúc ${fmtWhen(old.saved_at)}).\n\nĐẩy lên sẽ ĐÈ MẤT bản đó.\n\nVẫn đẩy?`))
 				return;
 		} else if (old) {
-			// Khác tên -> KHÔNG đè, mà tạo bản thứ hai. Bản cũ vẫn nằm trên máy nhưng
-			// danh sách chỉ hiện bản mới nhất, nên nó biến mất khỏi tầm mắt mà không
-			// mất thật. Phải nói ra, nếu không người dùng tưởng đã ghi đè.
-			if (!confirm(`Máy ${short(pushTo)} đang có bản tên "${old.name}".\n\nĐẩy tên "${name}" sẽ tạo bản THỨ HAI, không đè lên bản cũ. Danh sách chỉ hiện bản mới nhất nên "${old.name}" sẽ bị khuất.\n\nVẫn đẩy?`))
+			// Khác tên -> KHÔNG đè mà tạo bản thứ hai. Bản cũ vẫn nằm trên máy nhưng
+			// danh sách chỉ hiện bản mới nhất nên nó khuất đi. Phải nói ra.
+			if (!confirm(`Máy ${short(r.host)} đang có bản tên "${old.name}".\n\nĐẩy tên "${r.who}" sẽ tạo bản THỨ HAI, không đè lên bản cũ.\n\nVẫn đẩy?`))
 				return;
 		}
 
@@ -85,9 +86,8 @@
 		err = null;
 		msg = null;
 		try {
-			setWho(name);
-			const r = await wsPut(pushTo, name, ws.toJSON());
-			msg = `Đã đẩy "${name}" lên ${short(pushTo)} (${fmtSize(r.size)}).`;
+			const res = await wsPut(r.host, r.who, ws.toJSON());
+			msg = `Đã đẩy "${r.who}" lên ${short(r.host)} (${fmtSize(res.size)}).`;
 			await refresh();
 		} catch (e) {
 			err = (e as Error).message;
@@ -126,32 +126,14 @@
 				<h3 class="text-[15px] font-semibold text-ink-50">Chia sẻ workspace</h3>
 				<p class="text-[12px] text-ink-400">Đẩy bài lên máy của bạn, lấy bài của người khác về</p>
 			</div>
-			<button class="cursor-pointer text-ink-500 hover:text-ink-100" onclick={onclose} title="Đóng">
-				<HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={1.9} />
-			</button>
-		</div>
-
-		<div class="mb-3 flex flex-wrap items-end gap-2.5">
-			<div class="flex flex-col gap-1">
-				<span class="text-[11px] text-ink-500">Máy của bạn (nơi đẩy lên)</span>
-				<div class="flex overflow-hidden rounded-lg border border-ink-800">
-					{#each TEAM as t (t.host)}
-						<button
-							class="cursor-pointer px-3 py-1.5 font-mono text-[11.5px] transition-colors
-							{pushTo === t.host ? 'bg-brand text-ink-950' : 'bg-ink-825 text-ink-400 hover:text-ink-200'}"
-							onclick={() => { pushTo = t.host; who = t.name; }}
-						>
-							{t.name}
-						</button>
-					{/each}
-				</div>
+			<div class="flex items-center gap-3">
+				<button class="btn-secondary h-7 px-2.5 text-[11px]" onclick={refresh} disabled={busy}>
+					Làm mới
+				</button>
+				<button class="cursor-pointer text-ink-500 hover:text-ink-100" onclick={onclose} title="Đóng">
+					<HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={1.9} />
+				</button>
 			</div>
-			<label class="flex w-32 flex-col gap-1">
-				<span class="text-[11px] text-ink-500">Tên của bạn</span>
-				<input class="field h-8 font-mono text-xs" placeholder="A" bind:value={who} />
-			</label>
-			<button class="btn-primary h-8 px-4 text-xs" onclick={push} disabled={busy}>Đẩy lên</button>
-			<button class="btn-secondary h-8 px-3 text-xs" onclick={refresh} disabled={busy}>Làm mới</button>
 		</div>
 
 		<div class="mb-3 flex items-start gap-2 rounded-lg border border-warn/30 bg-warn/10 px-3 py-2 text-[11.5px] text-warn">
@@ -174,15 +156,12 @@
 				{@const on = !!r.item}
 				<div
 					class="flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors
-					{on ? 'border-ink-800 bg-ink-825' : 'border-ink-850 bg-ink-900 opacity-50'}"
+					{r.alive ? 'border-ink-800 bg-ink-825' : 'border-ink-850 bg-ink-900 opacity-50'}"
 				>
-					<span class="w-12 shrink-0 font-mono text-[12.5px] {on ? 'text-ink-100' : 'text-ink-500'}">
+					<span class="w-12 shrink-0 font-mono text-[12.5px] {r.alive ? 'text-ink-100' : 'text-ink-500'}">
 						{r.who}
 					</span>
 					<span class="flex-1 truncate font-mono text-[10.5px] text-ink-600">
-						{#if r.item && r.item.name !== r.who}
-							<span class="text-warn">bản "{r.item.name}"</span> ·
-						{/if}
 						{short(r.host)}
 						{#if r.extra}
 							<span class="text-ink-700">· còn {r.extra} bản cũ</span>
@@ -196,6 +175,14 @@
 						<span class="text-[11px] text-ink-600">{r.why}</span>
 					{/if}
 
+					<button
+						class="btn-primary h-7 w-20 shrink-0 justify-center px-2.5 text-[11px] disabled:cursor-not-allowed disabled:opacity-40"
+						disabled={!r.alive || busy}
+						onclick={() => push(r)}
+						title="Đẩy workspace của bạn lên máy này, đặt tên {r.who}"
+					>
+						Đẩy lên
+					</button>
 					<button
 						class="btn-secondary h-7 w-20 shrink-0 justify-center px-2.5 text-[11px] disabled:cursor-not-allowed disabled:opacity-40"
 						disabled={!on || busy}
