@@ -191,12 +191,40 @@ export const wsPut = (hub: string, name: string, body: string) =>
 		body
 	});
 
-/** Địa chỉ hub và tên người dùng - nhớ giữa các phiên để khỏi gõ lại. */
-const HUB = 'aic.hub';
+/** Danh sách hub và tên người dùng - nhớ giữa các phiên để khỏi gõ lại.
+ *
+ * DANH SÁCH chứ không phải một địa chỉ: mỗi người chạy một phiên Kaggle riêng nên
+ * bài của họ nằm trên máy của chính họ. Muốn thấy đủ cả đội thì phải hỏi từng máy. */
+const HUBS = 'aic.hubs';
 const WHO = 'aic.who';
-export const getHub = () =>
-	typeof localStorage === 'undefined' ? '' : localStorage.getItem(HUB) || getBase();
-export const setHub = (v: string) => localStorage.setItem(HUB, v.trim().replace(/\/+$/, ''));
+
+/** Bốn máy của đội. Điền sẵn để không ai phải gõ địa chỉ của ba người còn lại. */
+export const TEAM: { host: string; name: string }[] = [
+	{ host: 'https://aic.verse.id.vn', name: 'aic' },
+	{ host: 'https://htp.verse.id.vn', name: 'htp' },
+	{ host: 'https://lmh.verse.id.vn', name: 'lmh' },
+	{ host: 'https://nhh.verse.id.vn', name: 'nhh' }
+];
+
+/** Tên mặc định của một máy, để bấm chọn máy mình là tên tự điền. */
+export const nameOfHub = (host: string) =>
+	TEAM.find((t) => t.host === host.trim().replace(/\/+$/, ''))?.name ?? '';
+
+export function getHubs(): string[] {
+	if (typeof localStorage === 'undefined') return [];
+	try {
+		const v = JSON.parse(localStorage.getItem(HUBS) || '[]');
+		const saved = Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim()) : [];
+		// Chưa lưu gì thì trả về cả đội, khỏi bắt nhập tay bốn địa chỉ.
+		return saved.length ? saved : TEAM.map((t) => t.host);
+	} catch {
+		return TEAM.map((t) => t.host);
+	}
+}
+
+export const setHubs = (v: string[]) =>
+	localStorage.setItem(HUBS, JSON.stringify([...new Set(v.map((h) => h.trim().replace(/\/+$/, '')).filter(Boolean))]));
+
 export const getWho = () =>
 	typeof localStorage === 'undefined' ? '' : localStorage.getItem(WHO) || '';
 export const setWho = (v: string) => localStorage.setItem(WHO, v.trim());
