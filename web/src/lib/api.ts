@@ -195,7 +195,9 @@ export const wsPut = (hub: string, name: string, body: string) =>
  *
  * DANH SÁCH chứ không phải một địa chỉ: mỗi người chạy một phiên Kaggle riêng nên
  * bài của họ nằm trên máy của chính họ. Muốn thấy đủ cả đội thì phải hỏi từng máy. */
-const HUBS = 'aic.hubs';
+// v2: bản trước lưu đúng MỘT hub, nên nhánh điền sẵn cả đội không bao giờ chạy.
+// Đổi khoá là bỏ hẳn giá trị cũ, khỏi phải viết logic trộn.
+const HUBS = 'aic.hubs.v2';
 const WHO = 'aic.who';
 
 /** Bốn máy của đội. Điền sẵn để không ai phải gõ địa chỉ của ba người còn lại. */

@@ -188,7 +188,7 @@
 				<input class="field h-8 font-mono text-xs" placeholder="A" bind:value={who} />
 			</label>
 			<button class="btn-primary h-8 px-4 text-xs" onclick={push} disabled={busy}>
-				Đẩy lên {pushTo ? short(pushTo) : ''}
+				Đẩy lên {pushTo ? nameOfHub(pushTo) || short(pushTo) : ''}
 			</button>
 			<button class="btn-secondary h-8 px-3 text-xs" onclick={refresh} disabled={busy}>Làm mới</button>
 		</div>
