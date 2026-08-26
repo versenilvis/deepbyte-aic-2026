@@ -140,26 +140,37 @@ export function buildMergePlan(currentQueries: Query[], incomingQueries: Query[]
 
 	for (const [id, incoming] of incomingMap.entries()) {
 		const current = currentMap.get(id);
-		if (current) {
-			// mặc định chọn bên có nhiều đáp án hơn để hỗ trợ thao tác nhanh cho đội trưởng
-			const defaultChoice: ConflictResolution =
-				incoming.answers.length > current.answers.length ? 'incoming' : 'current';
+		if (!current) {
+			newQueries.push(incoming);
+			continue;
+		}
+
+		// Đội chia việc theo dải câu (A làm 1-12, B làm 13-18...) nhưng ai cũng có đủ
+		// 25 câu trong workspace, nên MỌI id đều trùng. Nếu coi tất cả là xung đột thì
+		// đội trưởng phải duyệt 25 dòng mà 24 dòng chẳng có gì để chọn.
+		// Chỉ một bên có đáp án -> lấy bên đó, không hỏi. Cả hai cùng có -> mới là
+		// xung đột thật, vì lúc đó bỏ bên nào cũng là mất việc của một người.
+		const hasCurrent = current.answers.length > 0;
+		const hasIncoming = incoming.answers.length > 0;
+
+		if (hasCurrent && hasIncoming) {
 			conflicts.push({
 				id,
 				task: incoming.task || current.task,
 				current,
 				incoming,
-				choice: defaultChoice
+				choice: incoming.answers.length > current.answers.length ? 'incoming' : 'current'
 			});
-		} else {
+		} else if (hasIncoming) {
 			newQueries.push(incoming);
+		} else {
+			// bên nạp vào rỗng -> giữ nguyên bản hiện có, kể cả khi cả hai đều rỗng
+			unmodified.push(current);
 		}
 	}
 
 	for (const [id, current] of currentMap.entries()) {
-		if (!incomingMap.has(id)) {
-			unmodified.push(current);
-		}
+		if (!incomingMap.has(id)) unmodified.push(current);
 	}
 
 	return { newQueries, conflicts, unmodified };
