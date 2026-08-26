@@ -13,8 +13,11 @@ export interface Candidate extends FrameRef {
     rank: number;
     image: string;
     group?: number;
+    /** Task 1/2: điểm đã trộn (0.4*base + 0.6*chain). Task 3: chính là chain. */
     score?: number;
-    parts?: Record<string, number>;
+    /** Chỉ có ở task 1/2. */
+    base_score?: number;
+    chain_score?: number;
     orig_frame_idx?: number;
     caption: string;
     speech: string;
@@ -68,6 +71,9 @@ export function tierOf(rank1: number): number {
     for (const t of RANK_TIERS) if (rank1 <= t) return t;
     return Infinity;
 }
+
+/** Mã task cho backend: 1 = KIS, 2 = Q&A, 3 = TRAKE. */
+export const TASK_TYPE: Record<Task, number> = { kis: 1, qa: 2, trake: 3 };
 
 export function taskOf(queryId: string): Task {
     const s = queryId.trim().toLowerCase().split("-").pop();

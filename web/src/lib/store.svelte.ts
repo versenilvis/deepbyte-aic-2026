@@ -191,6 +191,15 @@ class Workspace {
 		this.activeId = this.queries[0]?.id ?? null;
 		this.save();
 	}
+
+	// cập nhật danh sách câu hỏi sau khi gộp và lưu lại vào localstorage
+	applyMerged(queries: Query[]) {
+		this.queries = queries;
+		if (!this.queries.some((q) => q.id === this.activeId)) {
+			this.activeId = this.queries[0]?.id ?? null;
+		}
+		this.save();
+	}
 }
 
 function toRef(c: Candidate): FrameRef {

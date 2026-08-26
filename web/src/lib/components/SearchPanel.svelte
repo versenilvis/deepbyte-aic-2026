@@ -11,7 +11,7 @@
 	} from '@hugeicons/core-free-icons';
 	import { search } from '$lib/api';
 	import { ws } from '$lib/store.svelte';
-	import { WEIGHT_PRESETS, type Query, type Weights } from '$lib/types';
+	import { TASK_TYPE, WEIGHT_PRESETS, type Query, type Weights } from '$lib/types';
 
 	let { query }: { query: Query } = $props();
 
@@ -40,7 +40,8 @@
 			const out = await search(query.prompt, {
 				top_k: topK,
 				weights: w,
-				rawPrompt: manual ? undefined : query.brief
+				rawPrompt: manual ? undefined : query.brief,
+				task_type: TASK_TYPE[query.task]
 			});
 			query.candidates = out.results;
 			// Số events do LLM tách ra, không bắt người dùng đoán.

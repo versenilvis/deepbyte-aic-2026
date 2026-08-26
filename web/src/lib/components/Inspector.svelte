@@ -143,19 +143,26 @@
 					{/if}
 				</div>
 
-				<!-- Phân rã điểm theo tín hiệu. Đây mới là phần đáng đọc: con số tổng chỉ
-				     nói ô này xếp trên ô kia, còn phân rã nói ô này lên cao NHỜ ĐÂU.
-				     Một ô đứng đầu mà chỉ có ocr_bm25 cao là dấu hiệu truy vấn bị chữ
-				     kéo lệch - đúng kiểu lỗi đã đẩy 93 ô quảng cáo lên đầu. -->
-				{#if cur.parts}
+				<!-- Base = khung này khớp truy vấn đến đâu. Chain = cả video này khớp
+				     đến đâu. Base cao mà chain thấp nghĩa là một khung ăn may trong một
+				     video chẳng liên quan - đáng nghi. -->
+				{#if cur.base_score != null || cur.chain_score != null}
 					<div class="flex flex-wrap gap-1.5 text-[11px]">
-						{#each Object.entries(cur.parts) as [k, v]}
-							<span
-								class="tabular rounded-md border border-ink-800 px-1.5 py-0.5 font-mono
-								{v >= 0.5 ? 'text-ink-100' : 'text-ink-500'}">
-								{k} {v.toFixed(3)}
+						{#if cur.base_score != null}
+							<span class="tabular rounded-md border border-ink-800 px-1.5 py-0.5 font-mono text-ink-200">
+								base {cur.base_score.toFixed(4)}
 							</span>
-						{/each}
+						{/if}
+						{#if cur.chain_score != null}
+							<span class="tabular rounded-md border border-ink-800 px-1.5 py-0.5 font-mono text-ink-200">
+								chain {cur.chain_score.toFixed(4)}
+							</span>
+						{/if}
+						{#if cur.score != null}
+							<span class="tabular rounded-md border border-ink-800 px-1.5 py-0.5 font-mono text-ink-500">
+								tổng {cur.score.toFixed(4)}
+							</span>
+						{/if}
 					</div>
 				{/if}
 

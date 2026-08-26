@@ -31,6 +31,9 @@
     import ResultGrid from "$lib/components/ResultGrid.svelte";
     import SearchPanel from "$lib/components/SearchPanel.svelte";
     import FrameJump from "$lib/components/FrameJump.svelte";
+    import MergeModal from "$lib/components/MergeModal.svelte";
+    import { parseWorkspaceJson } from "$lib/merge";
+    import type { Query } from "$lib/types";
 
     let authed = $state(false);
     let hp = $state<Health | null>(null);
@@ -40,6 +43,8 @@
     let key = $state("");
     let authKey = $state("");
     let showExportModal = $state(false);
+    let showMergeModal = $state(false);
+    let incomingQueries = $state<Query[] | null>(null);
     let zoom = $state<Candidate[] | null>(null);
     let showClip = $state(false);
     let activeTab = $state<"search" | "jump">("search");
@@ -105,6 +110,27 @@
         }
     }
 
+    // đọc file json của đồng đội và mở giao diện đối chiếu các câu trùng
+    async function importAndMergeJson(e: Event) {
+        const input = e.target as HTMLInputElement;
+        const f = input.files?.[0];
+        if (f) {
+            try {
+                const parsed = parseWorkspaceJson(await f.text());
+                if (!parsed.length) {
+                    ws.error = "Tệp JSON không chứa truy vấn nào để gộp";
+                    return;
+                }
+                incomingQueries = parsed;
+                showMergeModal = true;
+            } catch (err) {
+                alert((err as Error).message);
+            } finally {
+                input.value = "";
+            }
+        }
+    }
+
     // Lightbox navigation
     let zoomIndex = $derived.by(() => {
         if (!zoom?.[0] || !ws.active) return -1;
@@ -135,6 +161,8 @@
         if (e.key === "Escape") {
             zoom = null;
             showExportModal = false;
+            showMergeModal = false;
+            incomingQueries = null;
         } else if (scrub.active) {
             // clip 5s đang mở: ← → thuộc về thanh tua frame, Space là phát/dừng
             return;
@@ -248,6 +276,31 @@
                         accept=".json"
                         class="hidden"
                         onchange={importJson} />
+                </label>
+
+                <label
+                    class="btn-secondary h-8 cursor-pointer"
+                    title="Trộn câu hỏi và đáp án từ file của đồng đội vào workspace hiện tại">
+                    <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="18" cy="18" r="3"></circle>
+                        <circle cx="6" cy="6" r="3"></circle>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <path d="M6 9v6"></path>
+                        <path d="M9 6h4a5 5 0 0 1 5 5v4"></path>
+                    </svg>
+                    <span>Gộp JSON</span>
+                    <input
+                        type="file"
+                        accept=".json"
+                        class="hidden"
+                        onchange={importAndMergeJson} />
                 </label>
 
                 <button
@@ -504,7 +557,21 @@
         </div>
     {/if}
 
-    <!-- 4. Lightbox Candidate Inspector (Zoom Modal) -->
+    <!-- 4. Merge Workspace Modal -->
+    {#if showMergeModal && incomingQueries}
+        <MergeModal
+            currentQueries={ws.queries}
+            {incomingQueries}
+            onapply={(merged) => {
+                ws.applyMerged(merged);
+            }}
+            onclose={() => {
+                showMergeModal = false;
+                incomingQueries = null;
+            }} />
+    {/if}
+
+    <!-- 5. Lightbox Candidate Inspector (Zoom Modal) -->
 {/if}
 
 {#if zoom && ws.active}
