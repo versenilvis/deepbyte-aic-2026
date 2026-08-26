@@ -50,18 +50,28 @@
 	}
 
 	async function push() {
-		if (!who.trim()) {
+		const name = who.trim();
+		if (!name) {
 			err = 'Nhập tên của bạn trước - nó là tên bản trên hub.';
 			return;
+		}
+
+		// Hai người lỡ dùng chung một tên thì cú đẩy sau đè mất cú trước, không báo gì.
+		// Hub không phân biệt được ai với ai nên chỉ có thể hỏi lại ở đây.
+		const old = items.find((i) => i.name === name);
+		if (old) {
+			const when = fmtWhen(old.saved_at);
+			if (!confirm(`Trên hub đã có bản tên "${name}" (lưu lúc ${when}).\n\nĐẩy lên sẽ ĐÈ MẤT bản đó. Nếu đó là của người khác, hãy đổi tên rồi thử lại.\n\nVẫn đẩy?`))
+				return;
 		}
 		busy = true;
 		err = null;
 		msg = null;
 		try {
 			setHub(hub);
-			setWho(who);
-			const r = await wsPut(hub, who.trim(), ws.toJSON());
-			msg = `Đã đẩy "${who.trim()}" lên hub (${fmtSize(r.size)}).`;
+			setWho(name);
+			const r = await wsPut(hub, name, ws.toJSON());
+			msg = `Đã đẩy "${name}" lên hub (${fmtSize(r.size)}).`;
 			await refresh();
 		} catch (e) {
 			err = (e as Error).message;
