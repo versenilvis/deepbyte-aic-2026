@@ -105,13 +105,7 @@
     function addBulk() {
         const items = parseBulk(bulk);
         let ok = 0;
-        for (const it of items) {
-            const q = ws.addQuery(it.id);
-            if (!q) continue;
-            if (it.brief) q.brief = it.brief;
-            ok++;
-        }
-        ws.save();
+        for (const it of items) if (ws.addQuery(it.id, undefined, it.brief)) ok++;
         bulk = "";
         showBulk = false;
         if (ok < items.length)
@@ -217,21 +211,13 @@
             <textarea
                 class="field mt-1.5 h-24 resize-none font-mono text-[11px]"
                 placeholder={"Dán cả trang đề, hoặc mỗi dòng một tên:\nquery-1-kis\nquery-2-qa"}
-                bind:value={bulk}
-                onkeydown={(e) => {
-                    // Enter tran phai de lai cho xuong dong - dan ca trang de la nhieu dong.
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && bulk.trim()) {
-                        e.preventDefault();
-                        addBulk();
-                    }
-                }}>
+                bind:value={bulk}>
             </textarea>
             <button
                 class="btn-primary mt-1.5 h-8 w-full py-1"
                 onclick={addBulk}
                 disabled={!bulk.trim()}>
                 Thêm {parseBulk(bulk).length} truy vấn
-                <kbd class="ml-1.5 text-[9.5px] opacity-60">⌘/Ctrl + Enter</kbd>
             </button>
             <p class="mt-1 text-[10px] leading-relaxed text-ink-500">
                 Dán thẳng danh sách file BTC phát. Đuôi <span class="font-mono">

@@ -55,7 +55,9 @@ class Workspace {
 		}
 	}
 
-	addQuery(id: string, customTask?: Task): Query | null {
+	/** `brief` phải gán TRƯỚC khi push: sau khi push thì object đã bị $state bọc
+	 *  proxy, gán vào tham chiếu thô không bắn tín hiệu nên giao diện không cập nhật. */
+	addQuery(id: string, customTask?: Task, brief = ""): Query | null {
 		const clean = id.trim().toLowerCase();
 		if (!clean || this.queries.some((q) => q.id === clean)) return null;
 		let task: Task;
@@ -70,6 +72,7 @@ class Workspace {
 			}
 		}
 		const q = emptyQuery(clean, task);
+		if (brief) q.brief = brief;
 		this.queries.push(q);
 		this.activeId = q.id;
 		this.save();
