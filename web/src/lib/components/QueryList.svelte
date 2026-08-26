@@ -80,14 +80,22 @@
         // có mô tả dài hơn - nếu không sẽ báo "trùng tên" cho đúng nửa số câu.
         const byId = new Map<string, string>();
         for (const [i, h] of hits.entries()) {
-            const brief = text
+            let lines = text
                 .slice(h.end, hits[i + 1]?.at ?? text.length)
                 .split("\n")
-                .filter((l) => !/\((KIS|Q&A|TRAKE)\)/i.test(l))
+                // bo dong tieu de nhom: "Question Answering (Q&A)", "... (TRAKE)"
+                .filter((l) => !/\((KIS|Q&A|TRAKE)\)/i.test(l));
+
+            // Cau cuoi cung dinh luon khoi "Tep dinh kem" o chan trang - cat tu do tro di.
+            const cut = lines.findIndex((l) => /^\s*(Tệp đính kèm|⬇)/i.test(l));
+            if (cut !== -1) lines = lines.slice(0, cut);
+
+            const brief = lines
                 .join("\n")
-                .replace(/^\.txt\b/i, "")
-                .replace(/\bCâu\s*$/i, "")
+                .replace(/^\.txt\b/i, "")   // ".txt" con lai tu danh sach tep
+                .replace(/\bCâu\s*$/i, "")  // chu "Cau" cua id ke tiep
                 .trim();
+
             const old = byId.get(h.id);
             if (old === undefined || brief.length > old.length) byId.set(h.id, brief);
         }
@@ -209,13 +217,21 @@
             <textarea
                 class="field mt-1.5 h-24 resize-none font-mono text-[11px]"
                 placeholder={"Dán cả trang đề, hoặc mỗi dòng một tên:\nquery-1-kis\nquery-2-qa"}
-                bind:value={bulk}>
+                bind:value={bulk}
+                onkeydown={(e) => {
+                    // Enter tran phai de lai cho xuong dong - dan ca trang de la nhieu dong.
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && bulk.trim()) {
+                        e.preventDefault();
+                        addBulk();
+                    }
+                }}>
             </textarea>
             <button
                 class="btn-primary mt-1.5 h-8 w-full py-1"
                 onclick={addBulk}
                 disabled={!bulk.trim()}>
                 Thêm {parseBulk(bulk).length} truy vấn
+                <kbd class="ml-1.5 text-[9.5px] opacity-60">⌘/Ctrl + Enter</kbd>
             </button>
             <p class="mt-1 text-[10px] leading-relaxed text-ink-500">
                 Dán thẳng danh sách file BTC phát. Đuôi <span class="font-mono">
