@@ -94,44 +94,8 @@
         showExportModal = false;
     }
 
-    function exportJson() {
-        download(
-            new Blob([ws.toJSON()], { type: "application/json" }),
-            "aic-workspace.json",
-        );
-    }
 
-    async function importJson(e: Event) {
-        const f = (e.target as HTMLInputElement).files?.[0];
-        if (f) {
-            try {
-                ws.fromJSON(await f.text());
-            } catch (err) {
-                alert((err as Error).message);
-            }
-        }
-    }
 
-    // đọc file json của đồng đội và mở giao diện đối chiếu các câu trùng
-    async function importAndMergeJson(e: Event) {
-        const input = e.target as HTMLInputElement;
-        const f = input.files?.[0];
-        if (f) {
-            try {
-                const parsed = parseWorkspaceJson(await f.text());
-                if (!parsed.length) {
-                    ws.error = "Tệp JSON không chứa truy vấn nào để gộp";
-                    return;
-                }
-                incomingQueries = parsed;
-                showMergeModal = true;
-            } catch (err) {
-                alert((err as Error).message);
-            } finally {
-                input.value = "";
-            }
-        }
-    }
 
     // Lightbox navigation
     let zoomIndex = $derived.by(() => {
@@ -260,52 +224,6 @@
 
                 <span class="h-4 w-px bg-ink-800"></span>
 
-                <label class="btn-secondary h-8 cursor-pointer">
-                    <svg
-                        class="size-3.5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                        stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <path d="M7 10l5 5 5-5"></path>
-                        <path d="M12 15V3"></path>
-                    </svg>
-                    <span>Nạp JSON</span>
-                    <input
-                        type="file"
-                        accept=".json"
-                        class="hidden"
-                        onchange={importJson} />
-                </label>
-
-                <label
-                    class="btn-secondary h-8 cursor-pointer"
-                    title="Trộn câu hỏi và đáp án từ file của đồng đội vào workspace hiện tại">
-                    <svg
-                        class="size-3.5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                        stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="18" cy="18" r="3"></circle>
-                        <circle cx="6" cy="6" r="3"></circle>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <path d="M6 9v6"></path>
-                        <path d="M9 6h4a5 5 0 0 1 5 5v4"></path>
-                    </svg>
-                    <span>Gộp JSON</span>
-                    <input
-                        type="file"
-                        accept=".json"
-                        class="hidden"
-                        onchange={importAndMergeJson} />
-                </label>
-
                 <button
                     class="btn-secondary h-8"
                     onclick={() => (showShareModal = true)}
@@ -325,25 +243,6 @@
                         <path d="M15.4 6.5l-6.8 4"></path>
                     </svg>
                     <span>Chia sẻ</span>
-                </button>
-
-                <button
-                    class="btn-secondary h-8"
-                    onclick={exportJson}
-                    title="Lưu lại tiến trình hiện tại thành file JSON">
-                    <svg
-                        class="size-3.5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                        stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                        <path d="M17 21v-8H7v8"></path>
-                        <path d="M7 3v5h8"></path>
-                    </svg>
-                    <span>Lưu workspace</span>
                 </button>
 
                 <button

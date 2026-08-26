@@ -187,14 +187,6 @@ class Workspace {
 		return JSON.stringify({ version: 1, savedAt: Date.now(), queries: this.queries }, null, 2);
 	}
 
-	fromJSON(text: string) {
-		const d = JSON.parse(text);
-		if (!Array.isArray(d.queries)) throw new Error('File không đúng định dạng workspace');
-		this.queries = d.queries;
-		this.activeId = this.queries[0]?.id ?? null;
-		this.save();
-	}
-
 	// cập nhật danh sách câu hỏi sau khi gộp và lưu lại vào localstorage
 	applyMerged(queries: Query[]) {
 		this.queries = queries;
