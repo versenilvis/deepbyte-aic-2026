@@ -45,6 +45,7 @@
     let authKey = $state("");
     let showExportModal = $state(false);
     let showMergeModal = $state(false);
+    let incomingFrom = $state("");
     let showShareModal = $state(false);
     let incomingQueries = $state<Query[] | null>(null);
     let zoom = $state<Candidate[] | null>(null);
@@ -485,8 +486,8 @@
         <ShareModal
             onclose={() => (showShareModal = false)}
             onpull={(text, name) => {
-                // Đi qua đúng luồng gộp có sẵn, KHÔNG ghi đè thẳng - giống hệt
-                // importAndMergeJson, chỉ khác nguồn là hub thay vì file trên máy.
+                // Không ghi đè thẳng: mở bảng chọn để người dùng tích đúng câu
+                // mình cần, phần còn lại giữ nguyên.
                 try {
                     const parsed = parseWorkspaceJson(text);
                     if (!parsed.length) {
@@ -494,6 +495,7 @@
                         return;
                     }
                     incomingQueries = parsed;
+                    incomingFrom = name;
                     showShareModal = false;
                     showMergeModal = true;
                 } catch (e) {
@@ -506,8 +508,11 @@
         <MergeModal
             currentQueries={ws.queries}
             {incomingQueries}
+            fromName={incomingFrom}
             onapply={(merged) => {
                 ws.applyMerged(merged);
+                showMergeModal = false;
+                incomingQueries = null;
             }}
             onclose={() => {
                 showMergeModal = false;
