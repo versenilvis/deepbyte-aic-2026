@@ -32,6 +32,7 @@
     import SearchPanel from "$lib/components/SearchPanel.svelte";
     import FrameJump from "$lib/components/FrameJump.svelte";
     import MergeModal from "$lib/components/MergeModal.svelte";
+    import ShareModal from "$lib/components/ShareModal.svelte";
     import { parseWorkspaceJson } from "$lib/merge";
     import type { Query } from "$lib/types";
 
@@ -44,6 +45,7 @@
     let authKey = $state("");
     let showExportModal = $state(false);
     let showMergeModal = $state(false);
+    let showShareModal = $state(false);
     let incomingQueries = $state<Query[] | null>(null);
     let zoom = $state<Candidate[] | null>(null);
     let showClip = $state(false);
@@ -162,6 +164,7 @@
             zoom = null;
             showExportModal = false;
             showMergeModal = false;
+            showShareModal = false;
             incomingQueries = null;
         } else if (scrub.active) {
             // clip 5s đang mở: ← → thuộc về thanh tua frame, Space là phát/dừng
@@ -302,6 +305,27 @@
                         class="hidden"
                         onchange={importAndMergeJson} />
                 </label>
+
+                <button
+                    class="btn-secondary h-8"
+                    onclick={() => (showShareModal = true)}
+                    title="Đẩy bài lên máy chung của đội, hoặc lấy bài người khác về">
+                    <svg
+                        class="size-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <path d="M8.6 13.5l6.8 4"></path>
+                        <path d="M15.4 6.5l-6.8 4"></path>
+                    </svg>
+                    <span>Chia sẻ</span>
+                </button>
 
                 <button
                     class="btn-secondary h-8"
@@ -558,6 +582,27 @@
     {/if}
 
     <!-- 4. Merge Workspace Modal -->
+    {#if showShareModal}
+        <ShareModal
+            onclose={() => (showShareModal = false)}
+            onpull={(text, name) => {
+                // Đi qua đúng luồng gộp có sẵn, KHÔNG ghi đè thẳng - giống hệt
+                // importAndMergeJson, chỉ khác nguồn là hub thay vì file trên máy.
+                try {
+                    const parsed = parseWorkspaceJson(text);
+                    if (!parsed.length) {
+                        ws.error = `Workspace "${name}" không có truy vấn nào`;
+                        return;
+                    }
+                    incomingQueries = parsed;
+                    showShareModal = false;
+                    showMergeModal = true;
+                } catch (e) {
+                    ws.error = (e as Error).message;
+                }
+            }} />
+    {/if}
+
     {#if showMergeModal && incomingQueries}
         <MergeModal
             currentQueries={ws.queries}

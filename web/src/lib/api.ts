@@ -148,3 +148,55 @@ export function keyframes(
 ): Promise<{ video_id: string; fps: number; count: number; keyframes: Keyframe[] }> {
 	return req(`/keyframes?video_id=${encodeURIComponent(video_id)}&n_from=${n_from}&n_to=${n_to}`);
 }
+
+/* ── chia sẻ workspace ────────────────────────────────────────────────────
+ * Nhận `hub` tường minh chứ KHÔNG dùng getBase(): mỗi người chạy một phiên
+ * Kaggle riêng nên backend TÌM KIẾM của họ khác nhau, còn chỗ TRAO ĐỔI phải là
+ * một máy duy nhất cả đội cùng trỏ tới. Hai thứ đó không liên quan gì nhau.
+ */
+
+export interface WsItem {
+	name: string;
+	size: number;
+	saved_at: number;
+}
+
+const hubUrl = (hub: string, path: string) => hub.trim().replace(/\/+$/, '') + path;
+
+async function hubReq<T>(hub: string, path: string, init: RequestInit = {}): Promise<T> {
+	if (!hub.trim()) throw new Error('Chưa nhập địa chỉ hub');
+	const res = await fetch(hubUrl(hub, path), {
+		...init,
+		headers: { ...(init.headers ?? {}), 'X-AIC-Key': getKey() }
+	});
+	if (res.status === 401) throw new Error('Sai key hoặc thiếu key');
+	if (!res.ok) throw new Error(`${res.status} ${res.statusText} (${path})`);
+	return res.json() as Promise<T>;
+}
+
+export const wsList = (hub: string) => hubReq<{ items: WsItem[] }>(hub, '/ws');
+
+export async function wsGet(hub: string, name: string): Promise<string> {
+	const res = await fetch(hubUrl(hub, `/ws/${encodeURIComponent(name)}`), {
+		headers: { 'X-AIC-Key': getKey() }
+	});
+	if (!res.ok) throw new Error(`Không tải được "${name}": ${res.status}`);
+	return res.text();
+}
+
+export const wsPut = (hub: string, name: string, body: string) =>
+	hubReq<{ ok: boolean; size: number }>(hub, `/ws/${encodeURIComponent(name)}`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body
+	});
+
+/** Địa chỉ hub và tên người dùng - nhớ giữa các phiên để khỏi gõ lại. */
+const HUB = 'aic.hub';
+const WHO = 'aic.who';
+export const getHub = () =>
+	typeof localStorage === 'undefined' ? '' : localStorage.getItem(HUB) || getBase();
+export const setHub = (v: string) => localStorage.setItem(HUB, v.trim().replace(/\/+$/, ''));
+export const getWho = () =>
+	typeof localStorage === 'undefined' ? '' : localStorage.getItem(WHO) || '';
+export const setWho = (v: string) => localStorage.setItem(WHO, v.trim());
