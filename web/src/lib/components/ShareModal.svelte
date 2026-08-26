@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Cancel01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
-	import { TEAM, getWho, nameOfHub, setWho, wsGet, wsList, wsPut, type WsItem } from '$lib/api';
+	import { TEAM, getWho, setWho, wsGet, wsList, wsPut, type WsItem } from '$lib/api';
 	import { ws } from '$lib/store.svelte';
 
 	interface Props {
@@ -13,11 +13,13 @@
 	let { onpull, onclose }: Props = $props();
 
 	/** Một dòng = một máy trong đội. Luôn hiện đủ, kể cả máy chưa bật. */
-	type Row = { host: string; who: string; item: WsItem | null; why: string };
+	type Row = { host: string; who: string; item: WsItem | null; why: string; extra: number };
 
 	let pushTo = $state(TEAM[0].host);
 	let who = $state(getWho() || TEAM[0].name);
-	let rows = $state<Row[]>(TEAM.map((t) => ({ host: t.host, who: t.name, item: null, why: 'đang hỏi...' })));
+	let rows = $state<Row[]>(
+		TEAM.map((t) => ({ host: t.host, who: t.name, item: null, why: 'đang hỏi...', extra: 0 }))
+	);
 	let busy = $state(false);
 	let msg = $state<string | null>(null);
 	let err = $state<string | null>(null);
@@ -46,13 +48,18 @@
 			if (r.status !== 'fulfilled') {
 				const m = String((r.reason as Error)?.message ?? '');
 				return {
-					host: t.host, who: t.name, item: null,
+					host: t.host, who: t.name, item: null, extra: 0,
 					why: /key/i.test(m) ? 'sai key' : /5\d\d/.test(m) ? 'máy chưa bật' : 'không kết nối được'
 				};
 			}
 			// Thường mỗi máy chỉ có một bản; nếu nhiều thì lấy bản mới nhất.
-			const newest = [...r.value.items].sort((a, b) => b.saved_at - a.saved_at)[0] ?? null;
-			return { host: t.host, who: t.name, item: newest, why: newest ? '' : 'chưa đẩy bài' };
+			const sorted = [...r.value.items].sort((a, b) => b.saved_at - a.saved_at);
+			const newest = sorted[0] ?? null;
+			return {
+				host: t.host, who: t.name, item: newest,
+				why: newest ? '' : 'chưa đẩy bài',
+				extra: Math.max(0, sorted.length - 1)
+			};
 		});
 		busy = false;
 	}
@@ -61,11 +68,18 @@
 		const name = who.trim();
 		if (!name) return (err = 'Nhập tên của bạn trước - nó là tên bản trên máy.');
 
-		// Hai người lỡ dùng chung một tên thì cú đẩy sau đè mất cú trước, không báo gì.
 		const old = rows.find((r) => r.host === pushTo)?.item;
-		if (old && old.name === name &&
-			!confirm(`Trên ${short(pushTo)} đã có bản tên "${name}" (lưu lúc ${fmtWhen(old.saved_at)}).\n\nĐẩy lên sẽ ĐÈ MẤT bản đó.\n\nVẫn đẩy?`))
-			return;
+		if (old && old.name === name) {
+			// Cùng tên -> ghi đè. Có thể là bản của người khác nên phải hỏi.
+			if (!confirm(`Trên ${short(pushTo)} đã có bản tên "${name}" (lưu lúc ${fmtWhen(old.saved_at)}).\n\nĐẩy lên sẽ ĐÈ MẤT bản đó.\n\nVẫn đẩy?`))
+				return;
+		} else if (old) {
+			// Khác tên -> KHÔNG đè, mà tạo bản thứ hai. Bản cũ vẫn nằm trên máy nhưng
+			// danh sách chỉ hiện bản mới nhất, nên nó biến mất khỏi tầm mắt mà không
+			// mất thật. Phải nói ra, nếu không người dùng tưởng đã ghi đè.
+			if (!confirm(`Máy ${short(pushTo)} đang có bản tên "${old.name}".\n\nĐẩy tên "${name}" sẽ tạo bản THỨ HAI, không đè lên bản cũ. Danh sách chỉ hiện bản mới nhất nên "${old.name}" sẽ bị khuất.\n\nVẫn đẩy?`))
+				return;
+		}
 
 		busy = true;
 		err = null;
@@ -118,14 +132,20 @@
 		</div>
 
 		<div class="mb-3 flex flex-wrap items-end gap-2.5">
-			<label class="flex min-w-[220px] flex-1 flex-col gap-1">
+			<div class="flex flex-col gap-1">
 				<span class="text-[11px] text-ink-500">Máy của bạn (nơi đẩy lên)</span>
-				<select class="field h-8 cursor-pointer font-mono text-xs" bind:value={pushTo} onchange={() => (who = nameOfHub(pushTo) || who)}>
+				<div class="flex overflow-hidden rounded-lg border border-ink-800">
 					{#each TEAM as t (t.host)}
-						<option value={t.host}>{t.name} · {short(t.host)}</option>
+						<button
+							class="cursor-pointer px-3 py-1.5 font-mono text-[11.5px] transition-colors
+							{pushTo === t.host ? 'bg-brand text-ink-950' : 'bg-ink-825 text-ink-400 hover:text-ink-200'}"
+							onclick={() => { pushTo = t.host; who = t.name; }}
+						>
+							{t.name}
+						</button>
 					{/each}
-				</select>
-			</label>
+				</div>
+			</div>
 			<label class="flex w-32 flex-col gap-1">
 				<span class="text-[11px] text-ink-500">Tên của bạn</span>
 				<input class="field h-8 font-mono text-xs" placeholder="A" bind:value={who} />
@@ -159,7 +179,15 @@
 					<span class="w-12 shrink-0 font-mono text-[12.5px] {on ? 'text-ink-100' : 'text-ink-500'}">
 						{r.who}
 					</span>
-					<span class="flex-1 truncate font-mono text-[10.5px] text-ink-600">{short(r.host)}</span>
+					<span class="flex-1 truncate font-mono text-[10.5px] text-ink-600">
+						{#if r.item && r.item.name !== r.who}
+							<span class="text-warn">bản "{r.item.name}"</span> ·
+						{/if}
+						{short(r.host)}
+						{#if r.extra}
+							<span class="text-ink-700">· còn {r.extra} bản cũ</span>
+						{/if}
+					</span>
 
 					{#if on}
 						<span class="tabular text-[11px] text-ink-500">{fmtSize(r.item!.size)}</span>
