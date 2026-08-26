@@ -36,23 +36,15 @@
 		trake: 'border-task-trake/40 bg-task-trake/7 text-task-trake'
 	};
 
-	// khởi tạo lựa chọn mặc định khi kế hoạch gộp thay đổi
-	$effect(() => {
-		const initChoices: Record<string, ConflictResolution> = {};
-		for (const conflict of plan.conflicts) {
-			const idKey = conflict.id.toLowerCase();
-			if (!choices[idKey]) {
-				// ưu tiên chọn bên có nhiều đáp án hơn làm giá trị mặc định cho người dùng
-				initChoices[idKey] =
-					conflict.incoming.answers.length > conflict.current.answers.length
-						? 'incoming'
-						: 'current';
-			} else {
-				initChoices[idKey] = choices[idKey];
-			}
-		}
-		choices = initChoices;
-	});
+	/* KHÔNG đồng bộ `choices` bằng $effect.
+	 *
+	 * Bản trước có một effect vừa ĐỌC vừa GHI `choices`, nên mỗi lần người dùng bấm
+	 * là nó tự kích lại chính mình và dựng object mới - vòng lặp làm chết phản ứng,
+	 * bấm "Tất cả: Ghép đáp án" mà giao diện không đổi.
+	 *
+	 * `choices` giờ chỉ chứa lựa chọn NGƯỜI DÙNG đã bấm. Chưa bấm thì đọc mặc định
+	 * từ `conflict.choice` mà buildMergePlan đã tính sẵn. executeMerge cũng dùng đúng
+	 * quy tắc `choices[id] ?? conflict.choice` nên hai bên không thể lệch nhau. */
 
 	let filteredConflicts = $derived(
 		plan.conflicts.filter((c) => {
