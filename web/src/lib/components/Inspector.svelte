@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Cancel01Icon, Image01Icon, Video01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
-	import { imageUrl } from '$lib/api';
+	import { Cancel01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
+	import { imageUrl, videoUrl } from '$lib/api';
 	import FrameScrubber from './FrameScrubber.svelte';
 	import type { Candidate, Query } from '$lib/types';
 
@@ -33,7 +33,8 @@
 	}
 
 	let active = $state(0);
-	let mode = $state<'image' | 'video'>('image');
+	/** 'video' = clip 5s co bo dem frame. 'full' = ca video goc. */
+	let mode = $state<'image' | 'video' | 'full'>('image');
 	/** frame đang chọn cho từng action, khởi tạo từ kết quả search. */
 	let picked = $state<number[]>([]);
 
@@ -102,6 +103,20 @@
 					max={hi}
 					onpick={(f) => (picked[active] = f)}
 				/>
+			{:else if mode === 'full'}
+				<!-- Video goc, tua duoc. `#t=` bat trinh duyet nhay thang toi giay cua
+				     frame dang xem. Backend chi tra file kem header Range nen mo tuc thi,
+				     khong cho ffmpeg dung clip nhu nhanh 'video'. -->
+				{#key `${cur.video_id}-${cur.frame_id}`}
+					<!-- svelte-ignore a11y_media_has_caption -->
+					<video
+						src={videoUrl(cur.video_id, cur.pts_time)}
+						controls
+						autoplay
+						preload="metadata"
+						class="max-h-[62vh] w-full rounded-xl bg-ink-950 object-contain"
+					></video>
+				{/key}
 			{:else}
 				<div class="ph ph-{cur.keyframe_n % 8} flex max-h-[62vh] min-h-64 items-center justify-center overflow-hidden rounded-xl">
 					<img
@@ -121,10 +136,16 @@
 						· {mmss(cur.pts_time)} · {cur.pts_time.toFixed(1)}s · {cur.fps ?? 25}fps
 					</span>
 
-					<button class="btn-secondary h-8 px-3" onclick={() => (mode = mode === 'video' ? 'image' : 'video')}>
-						<HugeiconsIcon icon={mode === 'video' ? Image01Icon : Video01Icon} size={14} strokeWidth={1.7} />
-						{mode === 'video' ? 'Xem ảnh' : 'Clip 5s + đếm frame'}
-					</button>
+					<div class="flex overflow-hidden rounded-lg border border-ink-800">
+						{#each [['image', 'Ảnh'], ['video', 'Clip 5s'], ['full', 'Cả video']] as [m, label] (m)}
+							<button
+								class="cursor-pointer px-2.5 py-1.5 text-[11px] transition-colors
+								{mode === m ? 'bg-brand text-ink-950' : 'bg-ink-825 text-ink-400 hover:text-ink-200'}"
+								onclick={() => (mode = m as 'image' | 'video' | 'full')}>
+								{label}
+							</button>
+						{/each}
+					</div>
 
 					{#if onpick}
 						<button

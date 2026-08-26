@@ -49,17 +49,65 @@
         add();
     }
 
+    /** Mọi id truy vấn: `query-1-kis` lẫn `query-p1-24-kis`. */
+    const ID_RE = /query(?:-[a-z0-9]+)+-(?:kis|qa|trake)\b/gi;
+
+    /**
+     * Bóc id + mô tả từ một trang đề dán nguyên.
+     *
+     * Tách theo VỊ TRÍ của id chứ không theo dòng: mọi thứ nằm giữa id này và id kế
+     * tiếp là mô tả của nó. Dán cả trang thì giữa các câu còn lẫn tiêu đề nhóm
+     * ("Question Answering (Q&A)") và chữ "Câu" đứng trước id sau - cắt hai thứ đó ra.
+     *
+     * Không thấy id nào thì rơi về hành vi cũ: mỗi dòng là một tên.
+     */
+    function parseBulk(text: string): { id: string; brief: string }[] {
+        const hits = [...text.matchAll(ID_RE)].map((m) => ({
+            id: m[0].toLowerCase(),
+            at: m.index ?? 0,
+            end: (m.index ?? 0) + m[0].length,
+        }));
+
+        if (!hits.length)
+            return text
+                .split(/[\n,]/)
+                .map((l) => l.trim().replace(/\.txt$/i, ""))
+                .filter(Boolean)
+                .map((id) => ({ id, brief: "" }));
+
+        // Trang đề thường có CẢ danh sách file .txt lẫn phần nội dung, nên mỗi id
+        // xuất hiện hai lần: một lần trơ trọi, một lần kèm mô tả. Gộp lại, giữ bản
+        // có mô tả dài hơn - nếu không sẽ báo "trùng tên" cho đúng nửa số câu.
+        const byId = new Map<string, string>();
+        for (const [i, h] of hits.entries()) {
+            const brief = text
+                .slice(h.end, hits[i + 1]?.at ?? text.length)
+                .split("\n")
+                .filter((l) => !/\((KIS|Q&A|TRAKE)\)/i.test(l))
+                .join("\n")
+                .replace(/^\.txt\b/i, "")
+                .replace(/\bCâu\s*$/i, "")
+                .trim();
+            const old = byId.get(h.id);
+            if (old === undefined || brief.length > old.length) byId.set(h.id, brief);
+        }
+        return [...byId].map(([id, brief]) => ({ id, brief }));
+    }
+
     function addBulk() {
-        const names = bulk
-            .split(/[\n,]/)
-            .map((s) => s.trim().replace(/\.txt$/i, ""))
-            .filter(Boolean);
+        const items = parseBulk(bulk);
         let ok = 0;
-        for (const n of names) if (ws.addQuery(n)) ok++;
+        for (const it of items) {
+            const q = ws.addQuery(it.id);
+            if (!q) continue;
+            if (it.brief) q.brief = it.brief;
+            ok++;
+        }
+        ws.save();
         bulk = "";
         showBulk = false;
-        if (ok < names.length)
-            ws.error = `Thêm được ${ok}/${names.length} - phần còn lại trùng tên hoặc sai hậu tố.`;
+        if (ok < items.length)
+            ws.error = `Thêm được ${ok}/${items.length} - phần còn lại trùng tên hoặc sai hậu tố.`;
     }
 
     function del(id: string, n: number) {
@@ -160,14 +208,14 @@
         {#if showBulk}
             <textarea
                 class="field mt-1.5 h-24 resize-none font-mono text-[11px]"
-                placeholder={"query-1-kis\nquery-2-qa\nquery-3-trake"}
+                placeholder={"Dán cả trang đề, hoặc mỗi dòng một tên:\nquery-1-kis\nquery-2-qa"}
                 bind:value={bulk}>
             </textarea>
             <button
                 class="btn-primary mt-1.5 h-8 w-full py-1"
                 onclick={addBulk}
                 disabled={!bulk.trim()}>
-                Thêm {bulk.split(/[\n,]/).filter((s) => s.trim()).length} truy vấn
+                Thêm {parseBulk(bulk).length} truy vấn
             </button>
             <p class="mt-1 text-[10px] leading-relaxed text-ink-500">
                 Dán thẳng danh sách file BTC phát. Đuôi <span class="font-mono">

@@ -96,6 +96,16 @@ export function clipUrl(video_id: string, frame_id: number, seconds = 5): string
 	return `${getBase()}/clip?video_id=${video_id}&frame_id=${frame_id}&seconds=${seconds}&v=${CLIP_V}&key=${encodeURIComponent(getKey())}`;
 }
 
+/**
+ * Video gốc, nhảy thẳng tới giây `t` bằng media fragment `#t=`.
+ *
+ * Khác `clipUrl`: không cắt, không mã hoá lại, backend chỉ trả file kèm header
+ * Range. Nên mở tức thì và tua được cả video, thay vì chờ ffmpeg dựng 5 giây.
+ */
+export function videoUrl(video_id: string, t = 0): string {
+	return `${getBase()}/video?video_id=${video_id}&key=${encodeURIComponent(getKey())}#t=${t.toFixed(2)}`;
+}
+
 export interface ClipInfo {
 	video_id: string;
 	fps: number;
