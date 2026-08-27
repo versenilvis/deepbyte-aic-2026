@@ -15,10 +15,19 @@
         MAX_ANSWERS,
         RANK_TIERS,
         validate,
+        type Answer,
+        type Candidate,
+        type FrameRef,
         type Query,
     } from "$lib/types";
 
-    let { query }: { query: Query } = $props();
+    let {
+        query,
+        onzoom,
+    }: {
+        query: Query;
+        onzoom?: (group: Candidate[]) => void;
+    } = $props();
 
     // Ảnh của đáp án đi chung kho với lưới kết quả: cùng cỡ w=384 nên phần lớn đã
     // nằm sẵn trong cache từ lúc tìm kiếm. Nạp workspace 100 đáp án cũng chỉ tốn vài
@@ -53,6 +62,51 @@
     function drop(to: number) {
         if (dragFrom !== null) ws.move(query, dragFrom, to);
         dragFrom = over = null;
+    }
+
+    function zoomAnswer(a: Answer, activeFrame?: FrameRef) {
+        if (!onzoom) return;
+        if (query.task === "trake" && a.frames.length > 1) {
+            const items: Candidate[] = a.frames.map((f) => {
+                const matched = query.candidates.find(
+                    (c) => c.video_id === f.video_id && c.frame_id === f.frame_id
+                );
+                if (matched) return matched;
+                return {
+                    rank: 0,
+                    group: 0,
+                    video_id: f.video_id,
+                    frame_id: f.frame_id,
+                    keyframe_n: f.keyframe_n,
+                    pts_time: f.pts_time,
+                    fps: f.fps ?? 25,
+                    image: `/image?video_id=${f.video_id}&n=${f.keyframe_n}`,
+                    caption: "",
+                    speech: "",
+                    ocr: "",
+                };
+            });
+            onzoom(items);
+        } else {
+            const target = activeFrame ?? a.frames[0];
+            if (!target) return;
+            const matched = query.candidates.find(
+                (c) => c.video_id === target.video_id && c.frame_id === target.frame_id
+            );
+            const item: Candidate = matched ?? {
+                rank: 0,
+                video_id: target.video_id,
+                frame_id: target.frame_id,
+                keyframe_n: target.keyframe_n,
+                pts_time: target.pts_time,
+                fps: target.fps ?? 25,
+                image: `/image?video_id=${target.video_id}&n=${target.keyframe_n}`,
+                caption: "",
+                speech: "",
+                ocr: "",
+            };
+            onzoom([item]);
+        }
     }
 </script>
 
@@ -180,16 +234,19 @@
                      to quá 64px khi chỉ có một - w-16 vừa là trần vừa là cỡ mặc định. -->
                 <div class="mt-1.5 flex gap-1 overflow-hidden pl-[26px]">
                     {#each a.frames as f (f.frame_id)}
-                        <span
-                            class="ph ph-{f.keyframe_n % 8} h-10 w-16 min-w-0 shrink overflow-hidden rounded-[5px] border border-ink-800">
+                        <button
+                            type="button"
+                            onclick={() => zoomAnswer(a, f)}
+                            title="Bấm để xem phóng to · clip 5s · video gốc"
+                            class="ph ph-{f.keyframe_n % 8} group/thumb relative h-10 w-16 min-w-0 shrink cursor-pointer overflow-hidden rounded-[5px] border border-ink-800 transition-all hover:border-brand hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-brand">
                             {#if src(f)}
                                 <img
 									use:queuedImage={src(f)!}
                                     alt=""
                                     loading="lazy"
-                                    class="thumb size-full object-cover" />
+                                    class="thumb size-full object-cover transition-transform group-hover/thumb:scale-105" />
                             {/if}
-                        </span>
+                        </button>
                     {/each}
                 </div>
 

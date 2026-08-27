@@ -365,7 +365,9 @@
 
             {#if ws.active}
                 <Resizer side="right" />
-                <AnswerList query={ws.active} />
+                <AnswerList
+                    query={ws.active}
+                    onzoom={(g) => (zoom = g)} />
             {/if}
         </div>
     </div>
