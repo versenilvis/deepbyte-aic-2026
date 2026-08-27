@@ -3,6 +3,7 @@
 	import { Cancel01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
 	import { imageUrl, videoUrl } from '$lib/api';
 	import FrameScrubber from './FrameScrubber.svelte';
+	import { ws } from '$lib/store.svelte';
 	import type { Candidate, Query } from '$lib/types';
 
 	/**
@@ -51,6 +52,31 @@
 	let hi = $derived(active < items.length - 1 ? picked[active + 1] - 1 : undefined);
 
 	let broken = $derived(picked.some((f, i) => i > 0 && f <= picked[i - 1]));
+
+	let existingAnswer = $derived.by(() => {
+		if (!items.length || !query.answers.length) return null;
+		if (isTrake) {
+			return (
+				query.answers.find(
+					(a) =>
+						a.frames.length === items.length &&
+						a.frames.every(
+							(f, idx) =>
+								f.video_id === items[idx]?.video_id &&
+								f.frame_id === (picked[idx] ?? items[idx]?.frame_id)
+						)
+				) ?? null
+			);
+		} else {
+			const curFrameId = picked[0] ?? cur?.frame_id;
+			if (!cur) return null;
+			return (
+				query.answers.find((a) =>
+					a.frames.some((f) => f.video_id === cur.video_id && f.frame_id === curFrameId)
+				) ?? null
+			);
+		}
+	});
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && onclose()} />
@@ -147,7 +173,18 @@
 						{/each}
 					</div>
 
-					{#if onpick}
+					{#if existingAnswer}
+						<button
+							class="btn h-[34px] border border-bad/40 bg-bad/12 px-4 text-[12.5px] font-medium text-bad transition-colors hover:bg-bad hover:text-ink-950 ml-auto flex items-center gap-1.5"
+							onclick={() => {
+								ws.removeAnswer(query, existingAnswer!.id);
+								onclose();
+							}}
+						>
+							<HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2} />
+							<span>Xóa khỏi danh sách nộp</span>
+						</button>
+					{:else if onpick}
 						<button
 							class="btn-primary ml-auto h-[34px] px-5 text-[12.5px]"
 							disabled={broken}
