@@ -24,9 +24,9 @@ import { getBase, getKey } from './api';
 /** Một cỡ duy nhất cho cả lưới lẫn danh sách đáp án: backend cache theo (video, n, w),
  *  dùng chung một w thì hai nơi share được cache, đỡ nửa việc cho backend. */
 const W = 384;
-const CHUNK = 24;
-const MAX_INFLIGHT = 2;
-const COALESCE_MS = 60;
+const CHUNK = 48;
+const MAX_INFLIGHT = 3;
+const COALESCE_MS = 25;
 const TIMEOUT_MS = 30_000;
 const MAX_CACHE = 4000;
 /** Giãn cách khi thử lại. Cộng thêm nhiễu ngẫu nhiên để nhiều tab không đập cùng nhịp. */

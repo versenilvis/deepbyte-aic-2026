@@ -9,7 +9,7 @@
  * dùng cache trình duyệt, chỉ khác là không dồn cục.
  */
 
-const MAX_PARALLEL = 6;
+const MAX_PARALLEL = 12;
 
 let running = 0;
 const queue: (() => void)[] = [];
