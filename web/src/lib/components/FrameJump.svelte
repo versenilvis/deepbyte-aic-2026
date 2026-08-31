@@ -44,7 +44,6 @@
 
 	let cols = $state(5);
 	let cursor = $state(0);
-	let target = $state<string | null>(null);
 	let grid = $state<HTMLDivElement | null>(null);
 
 	// tạo dải 25 keyframe quanh mốc tâm để người dùng rà soát bằng mắt
@@ -94,7 +93,7 @@
 			a.frames.some((f) => f.video_id === c.video_id && (f.frame_id === c.frame_id || f.keyframe_n === c.keyframe_n))
 		);
 		if (i >= 0) ws.removeAnswer(query, query.answers[i].id);
-		else if (query.task === 'trake' && target) ws.appendFrame(query, target, c);
+		// TRAKE cũng một frame một đáp án: định dạng nộp là mỗi frame một dòng.
 		else ws.addAnswer(query, c);
 	}
 
@@ -295,19 +294,6 @@
 		</button>
 	</div>
 
-	{#if query.task === 'trake'}
-		<select
-			class="cursor-pointer rounded-lg border border-ink-800 bg-ink-825 px-2.5 py-1 text-xs text-ink-200 hover:border-ink-700"
-			bind:value={target}
-		>
-			<option value={null}>tạo đáp án mới</option>
-			{#each query.answers as a, i (a.id)}
-				<option value={a.id}>
-					gắn vào #{i + 1} ({a.frames.length}/{query.n_events})
-				</option>
-			{/each}
-		</select>
-	{/if}
 
 	<div class="ml-auto flex items-center gap-5">
 		<span class="hidden items-center gap-2 text-[11px] text-ink-500 xl:flex">

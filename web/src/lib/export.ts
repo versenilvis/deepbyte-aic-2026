@@ -8,6 +8,17 @@ function cell(v: string | number): string {
 }
 
 export function toCsv(q: Query): string {
+	// TRAKE nộp MỖI FRAME MỘT DÒNG `video_id,frame_id`, không phải gộp cả chuỗi vào
+	// một dòng. Xác nhận qua hai lần nộp thật. Trải phẳng ở đây nên đáp án cũ còn
+	// nhiều frame vẫn xuất đúng, khỏi phải sửa dữ liệu đang có.
+	if (q.task === 'trake') {
+		return q.answers
+			.flatMap((a) => a.frames.map((f) => [f.video_id, f.frame_id]))
+			.slice(0, MAX_ANSWERS)
+			.map((row) => row.map(cell).join(','))
+			.join('\n');
+	}
+
 	return q.answers
 		.slice(0, MAX_ANSWERS)
 		.map((a) => {

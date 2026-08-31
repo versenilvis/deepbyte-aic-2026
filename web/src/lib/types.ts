@@ -85,23 +85,19 @@ export function taskOf(queryId: string): Task {
 
 export function validate(q: Query): string[] {
     const errs: string[] = [];
-    if (q.answers.length > MAX_ANSWERS)
-        errs.push(`${q.answers.length} đáp án, tối đa ${MAX_ANSWERS}`);
+    // TRAKE tính theo DÒNG nộp, mà mỗi frame là một dòng.
+    const rows =
+        q.task === "trake"
+            ? q.answers.reduce((n, a) => n + a.frames.length, 0)
+            : q.answers.length;
+    if (rows > MAX_ANSWERS) errs.push(`${rows} dòng, tối đa ${MAX_ANSWERS}`);
 
     q.answers.forEach((a, i) => {
         const at = `#${i + 1}`;
         if (q.task === "trake") {
-            // n_events tự suy từ số action LLM tách được; chưa search thì bỏ qua.
-            if (!q.n_events) return;
-            else if (a.frames.length !== q.n_events)
-                errs.push(
-                    `${at}: ${a.frames.length} frame, cần đúng ${q.n_events}`,
-                );
-            const ids = a.frames.map((f) => f.frame_id);
-            if (ids.some((v, k) => k > 0 && v < ids[k - 1]))
-                errs.push(`${at}: frame chưa theo thứ tự thời gian`);
-            if (new Set(a.frames.map((f) => f.video_id)).size > 1)
-                errs.push(`${at}: các frame phải cùng 1 video`);
+            // TRAKE nộp mỗi frame một dòng nên các frame ĐỘC LẬP: không ép đủ n_events,
+            // không ép cùng video, không ép tăng dần. Ba ràng buộc đó là của định dạng
+            // gộp cả chuỗi vào một dòng - định dạng đó đã sai, xác nhận qua hai lần nộp.
         } else if (a.frames.length !== 1) {
             errs.push(`${at}: ${q.task} chỉ được 1 frame`);
         }

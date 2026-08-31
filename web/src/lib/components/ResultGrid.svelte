@@ -31,7 +31,6 @@
      */
     let onlyGroups = $state<Set<string>>(new Set());
     /** TRAKE: đang gom frame vào đáp án nào. null = tạo đáp án mới. */
-    let target = $state<string | null>(null);
     let grid = $state<HTMLDivElement | null>(null);
 
     /** TRAKE hiện MỘT ô mỗi đáp án (ảnh = frame của action đầu), không rải phẳng n frame. */
@@ -48,9 +47,7 @@
     let shown = $derived.by(() => {
         let list = query.candidates;
         if (onlyGroups.size) list = list.filter((c) => onlyGroups.has(c.video_id.slice(0, 3)));
-        if (!list.length || list[0].group == null) return list;
-        const seen = new Set<number>();
-        return list.filter((c) => (seen.has(c.group!) ? false : (seen.add(c.group!), true)));
+        return list;
     });
 
     function toggleGroup(g: string) {
@@ -145,11 +142,10 @@
         );
     }
 
-    /** TRAKE: các candidate cùng `group` hợp thành MỘT đáp án, đúng thứ tự action. */
-    function groupOf(c: Candidate): Candidate[] {
-        if (c.group == null) return [c];
-        return query.candidates.filter((x) => x.group === c.group);
-    }
+    /* Mở Inspector cho ĐÚNG một frame. Trước đây TRAKE gom các candidate cùng
+       `group` thành một đáp án nhiều action - định dạng nộp đó đã sai, giờ mỗi
+       frame là một dòng nên cũng là một đáp án. */
+    const groupOf = (c: Candidate): Candidate[] => [c];
 
     function rankOf(c: Candidate): number | null {
         const i = query.answers.findIndex((a) =>
@@ -167,8 +163,8 @@
             ),
         );
         if (i >= 0) ws.removeAnswer(query, query.answers[i].id);
-        else if (query.task === "trake" && target)
-            ws.appendFrame(query, target, c);
+        // TRAKE cũng chỉ là một frame một đáp án như KIS: định dạng nộp là mỗi frame
+        // một dòng, không còn khái niệm chuỗi action để gắn frame vào.
         else ws.addAnswer(query, c);
     }
 
@@ -258,20 +254,6 @@
                 </button>
             {/if}
         </div>
-    {/if}
-
-    {#if query.task === "trake"}
-        <select
-            class="cursor-pointer rounded-lg border border-ink-800 bg-ink-825 px-2.5 py-1.5 text-xs
-        text-ink-200 hover:border-ink-700"
-            bind:value={target}>
-            <option value={null}>tạo đáp án mới</option>
-            {#each query.answers as a, i (a.id)}
-                <option value={a.id}>
-                    gắn vào #{i + 1} ({a.frames.length}/{query.n_events})
-                </option>
-            {/each}
-        </select>
     {/if}
 
     <div class="ml-auto flex items-center gap-5">
