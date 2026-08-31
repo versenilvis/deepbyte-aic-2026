@@ -45,7 +45,17 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
 		headers: { ...(init.headers ?? {}), 'X-AIC-Key': getKey() }
 	});
 	if (res.status === 401) throw new Error('Sai key hoặc thiếu key (xem key notebook in ra)');
-	if (!res.ok) throw new Error(`${res.status} ${res.statusText} (${path})`);
+	if (!res.ok) {
+		// Đọc `detail` của FastAPI. Không đọc thì mọi 404 trông giống hệt nhau, mà
+		// "route chưa đăng ký" (cần chạy lại cell) khác hẳn "không có dữ liệu này".
+		const detail = await res
+			.json()
+			.then((d) => (typeof d?.detail === 'string' ? d.detail : ''))
+			.catch(() => '');
+		if (res.status === 404 && detail === 'Not Found')
+			throw new Error(`Backend chưa có ${path.split('?')[0]} - chạy lại cell api_server trên Kaggle`);
+		throw new Error(detail ? `${detail} (${res.status})` : `${res.status} ${res.statusText} (${path})`);
+	}
 	return res.json() as Promise<T>;
 }
 
