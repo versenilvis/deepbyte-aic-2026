@@ -43,6 +43,22 @@
 	 *  đã đo: timestamp_sec == frame_idx / fps trên mọi video) nên quy đổi thẳng từ
 	 *  currentTime là chính xác, không cần mốc bù như clip 5s. */
 	let fullFrame = $state(0);
+	/**
+	 * Giây để nhảy tới khi mở "Cả video". CHỐT một lần lúc bấm sang chế độ đó.
+	 *
+	 * Không tính thẳng trong `src`: `picked[active]` là state, nên mỗi lần bấm chọn
+	 * frame mới `src` sẽ đổi, video nạp lại và nhảy về đầu - đang xem thì bị giật ra.
+	 */
+	let fullSeek = $state(0);
+
+	/** Mở cả video tại frame ĐANG CHỌN, không phải frame kết quả gốc. */
+	function showFull() {
+		if (!cur) return;
+		const f = picked[active] ?? cur.frame_id;
+		fullSeek = f / (cur.fps ?? 25);
+		fullFrame = f;
+		mode = 'full';
+	}
 	/** Frame vừa bấm chọn - dùng để nháy xác nhận, người dùng cần thấy là đã ăn. */
 	let justPicked = $state<number | null>(null);
 	let pickTimer: ReturnType<typeof setTimeout> | undefined;
@@ -150,11 +166,11 @@
 				<!-- Video goc, tua duoc. `#t=` bat trinh duyet nhay thang toi giay cua
 				     frame dang xem. Backend chi tra file kem header Range nen mo tuc thi,
 				     khong cho ffmpeg dung clip nhu nhanh 'video'. -->
-				{#key `${cur.video_id}-${cur.frame_id}`}
+				{#key `${cur.video_id}-${fullSeek}`}
 					<div class="relative">
 						<!-- svelte-ignore a11y_media_has_caption -->
 						<video
-							src={videoUrl(cur.video_id, cur.pts_time)}
+							src={videoUrl(cur.video_id, fullSeek)}
 							controls
 							autoplay
 							preload="metadata"
@@ -169,9 +185,13 @@
 						     đầy đủ dài hàng chục nghìn frame, mỗi lần nhích một frame trình
 						     duyệt phải giải mã lại từ keyframe gần nhất nên giật. Cần chính
 						     xác tới frame thì chuyển sang Clip 5s. -->
-						<div class="pointer-events-none absolute top-3 left-3 rounded-lg bg-ink-50 px-3 py-1.5 font-mono shadow-lg">
+						<!-- Bộ đếm đổi sang xanh khi đang đứng đúng frame đã chọn, để rà tới rà
+						     lui vẫn biết mốc của mình nằm đâu. -->
+						<div
+							class="pointer-events-none absolute top-3 left-3 rounded-lg px-3 py-1.5 font-mono shadow-lg
+							{fullFrame === (picked[active] ?? cur.frame_id) ? 'bg-ok' : 'bg-ink-50'}">
 							<span class="tabular text-lg font-bold tracking-[-0.02em] text-ink-950">{fullFrame}</span>
-							<span class="tabular ml-1.5 text-[11px] text-ink-500">{mmss(fullFrame / (cur.fps ?? 25))}</span>
+							<span class="tabular ml-1.5 text-[11px] text-ink-700">{mmss(fullFrame / (cur.fps ?? 25))}</span>
 						</div>
 
 						{#if onpick}
@@ -224,7 +244,7 @@
 							<button
 								class="cursor-pointer px-2.5 py-1.5 text-[11px] transition-colors
 								{mode === m ? 'bg-brand text-ink-950' : 'bg-ink-825 text-ink-400 hover:text-ink-200'}"
-								onclick={() => (mode = m as 'image' | 'video' | 'full')}>
+								onclick={() => (m === 'full' ? showFull() : (mode = m as 'image' | 'video'))}>
 								{label}
 							</button>
 						{/each}
