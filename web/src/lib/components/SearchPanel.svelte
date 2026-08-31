@@ -11,7 +11,13 @@
 	} from '@hugeicons/core-free-icons';
 	import { search } from '$lib/api';
 	import { ws } from '$lib/store.svelte';
-	import { TASK_TYPE, WEIGHT_PRESETS, type Query, type Weights } from '$lib/types';
+	import {
+		ALL_VIDEO_FOLDERS,
+		TASK_TYPE,
+		WEIGHT_PRESETS,
+		type Query,
+		type Weights
+	} from '$lib/types';
 
 	let { query }: { query: Query } = $props();
 
@@ -19,6 +25,7 @@
 	let manual = $state(false);
 	let parsed = $state<any>(null);
 	let showCfg = $state(false);
+	let showRegions = $state(false);
 
 	let w = $derived.by<Weights>(() => query.weights ?? { visual: 1, speech: 1, ocr: 1 });
 
@@ -32,6 +39,40 @@
 		ws.save();
 	}
 
+	function toggleRegion(folder: string) {
+		const curr = new Set(query.search_regions ?? []);
+		if (curr.has(folder)) {
+			curr.delete(folder);
+		} else {
+			curr.add(folder);
+		}
+		query.search_regions = Array.from(curr);
+		ws.save();
+	}
+
+	function selectAllRegions() {
+		query.search_regions = [...ALL_VIDEO_FOLDERS];
+		ws.save();
+	}
+
+	function clearAllRegions() {
+		query.search_regions = [];
+		ws.save();
+	}
+
+	function toggleGroup(prefixes: string[]) {
+		const matched = ALL_VIDEO_FOLDERS.filter((f) => prefixes.some((p) => f.includes(p)));
+		const curr = new Set(query.search_regions ?? []);
+		const allIn = matched.every((f) => curr.has(f));
+		if (allIn) {
+			matched.forEach((f) => curr.delete(f));
+		} else {
+			matched.forEach((f) => curr.add(f));
+		}
+		query.search_regions = Array.from(curr);
+		ws.save();
+	}
+
 	async function run() {
 		if (ws.busy) return;
 		ws.busy = true;
@@ -41,12 +82,13 @@
 				top_k: topK,
 				weights: w,
 				rawPrompt: manual ? undefined : query.brief,
-				task_type: TASK_TYPE[query.task]
+				task_type: TASK_TYPE[query.task],
+				search_regions: query.search_regions
 			});
 			query.candidates = out.results;
 			// Số events do LLM tách ra, không bắt người dùng đoán.
 			const n = (out.parsed as any)?.actions?.length;
-			if (query.task === "trake" && n > 1) query.n_events = n;
+			if (query.task === 'trake' && n > 1) query.n_events = n;
 			parsed = out.parsed;
 			if (!manual && parsed) {
 				query.prompt = {
@@ -142,6 +184,28 @@
 			<span class="tabular font-mono text-[11px]">{w.visual.toFixed(1)} / {w.speech.toFixed(1)} / {w.ocr.toFixed(1)}</span>
 		</button>
 
+		<button
+			class="flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1 transition-colors {showRegions
+				? 'border-brand/45 bg-brand/10 text-brand-hi'
+				: query.search_regions && query.search_regions.length > 0 && query.search_regions.length < ALL_VIDEO_FOLDERS.length
+				? 'border-brand/40 bg-brand/10 text-brand-hi'
+				: 'border-ink-800 bg-ink-825 text-ink-400 hover:border-ink-700 hover:text-ink-200'}"
+			onclick={() => (showRegions = !showRegions)}
+			title="Giới hạn vùng thư mục cần tìm kiếm"
+		>
+			<svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+			</svg>
+			<span class="text-[11px]">Thư mục</span>
+			{#if query.search_regions && query.search_regions.length > 0 && query.search_regions.length < ALL_VIDEO_FOLDERS.length}
+				<span class="tabular font-mono text-[11px] font-semibold text-brand-hi">
+					{query.search_regions.length}/{ALL_VIDEO_FOLDERS.length}
+				</span>
+			{:else}
+				<span class="tabular text-[11px] text-ink-500">Tất cả</span>
+			{/if}
+		</button>
+
 		{#if query.candidates.length}
 			<div class="ml-auto flex items-center gap-2">
 				<button
@@ -157,6 +221,75 @@
 			</div>
 		{/if}
 	</div>
+
+	<!-- regions selection drawer -->
+	{#if showRegions}
+		<div class="mt-3 rounded-[10px] border border-ink-800 bg-ink-925 p-3">
+			<div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+				<div class="flex items-center gap-2">
+					<span class="label-xs text-ink-400">Giới hạn thư mục:</span>
+					<span class="text-[11px] {query.search_regions && query.search_regions.length > 0 && query.search_regions.length < ALL_VIDEO_FOLDERS.length ? 'text-brand-hi font-medium' : 'text-ink-500'}">
+						{query.search_regions && query.search_regions.length > 0 && query.search_regions.length < ALL_VIDEO_FOLDERS.length
+							? `Đang chọn ${query.search_regions.length}/${ALL_VIDEO_FOLDERS.length} thư mục`
+							: 'Đang tìm toàn bộ (14 thư mục)'}
+					</span>
+				</div>
+				<div class="flex items-center gap-1.5">
+					<button
+						class="cursor-pointer rounded border border-ink-800 bg-ink-850 px-2 py-0.5 text-[11px] text-ink-300 transition-colors hover:border-brand/40 hover:text-brand-hi"
+						onclick={selectAllRegions}
+					>
+						Chọn tất cả
+					</button>
+					<button
+						class="cursor-pointer rounded border border-ink-800 bg-ink-850 px-2 py-0.5 text-[11px] text-ink-300 transition-colors hover:border-brand/40 hover:text-brand-hi"
+						onclick={clearAllRegions}
+					>
+						Toàn bộ (bỏ lọc)
+					</button>
+				</div>
+			</div>
+
+			<!-- Quick group selectors -->
+			<div class="mb-3 flex flex-wrap items-center gap-1.5">
+				<span class="text-[10px] uppercase font-medium text-ink-500">Nhóm nhanh:</span>
+				{#each [
+					{ label: 'L21 - L25', prefixes: ['L21', 'L22', 'L23', 'L24', 'L25'] },
+					{ label: 'L26 (a-e)', prefixes: ['L26'] },
+					{ label: 'L27 - L30', prefixes: ['L27', 'L28', 'L29', 'L30'] }
+				] as grp}
+					<button
+						class="cursor-pointer rounded border border-ink-800 bg-ink-900 px-2 py-0.5 text-[10.5px] text-ink-300 transition-colors hover:border-brand/40 hover:text-brand-hi"
+						onclick={() => toggleGroup(grp.prefixes)}
+					>
+						{grp.label}
+					</button>
+				{/each}
+			</div>
+
+			<!-- Checkbox chips grid -->
+			<div class="grid grid-cols-2 gap-1.5 sm:grid-cols-4 md:grid-cols-7">
+				{#each ALL_VIDEO_FOLDERS as folder}
+					{@const active = (query.search_regions ?? []).includes(folder)}
+					<button
+						class="flex cursor-pointer items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs transition-all {active
+							? 'border-brand/50 bg-brand/15 text-brand-hi shadow-sm shadow-brand/10'
+							: 'border-ink-800 bg-ink-900 text-ink-400 hover:border-ink-700 hover:text-ink-200'}"
+						onclick={() => toggleRegion(folder)}
+					>
+						<span class="font-mono text-[11px] truncate">{folder.replace('Videos_', '')}</span>
+						<span class="size-3.5 flex items-center justify-center rounded border {active ? 'border-brand bg-brand text-ink-950' : 'border-ink-700 bg-ink-950'}">
+							{#if active}
+								<svg class="size-2.5 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<polyline points="20 6 9 17 4 12"></polyline>
+								</svg>
+							{/if}
+						</span>
+					</button>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<!-- weights equalizer drawer -->
 	{#if showCfg}

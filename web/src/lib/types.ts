@@ -50,16 +50,36 @@ export const WEIGHT_PRESETS: Record<string, Weights> = {
     "thiên chữ": { visual: 0.5, speech: 0.5, ocr: 2 },
 };
 
+export const ALL_VIDEO_FOLDERS = [
+	'Videos_L21_a',
+	'Videos_L22_a',
+	'Videos_L23_a',
+	'Videos_L24_a',
+	'Videos_L25_a',
+	'Videos_L26_a',
+	'Videos_L26_b',
+	'Videos_L26_c',
+	'Videos_L26_d',
+	'Videos_L26_e',
+	'Videos_L27_a',
+	'Videos_L28_a',
+	'Videos_L29_a',
+	'Videos_L30_a'
+] as const;
+
+export type VideoFolder = (typeof ALL_VIDEO_FOLDERS)[number];
+
 export interface Query {
-    id: string;
-    task: Task;
-    brief: string;
-    prompt: Prompt;
-    n_events?: number;
-    weights?: Weights;
-    answers: Answer[];
-    candidates: Candidate[];
-    searchedAt?: number;
+	id: string;
+	task: Task;
+	brief: string;
+	prompt: Prompt;
+	n_events?: number;
+	weights?: Weights;
+	search_regions?: string[];
+	answers: Answer[];
+	candidates: Candidate[];
+	searchedAt?: number;
 }
 
 export const MAX_ANSWERS = 100;

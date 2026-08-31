@@ -68,7 +68,13 @@ export interface SearchOut {
 
 export async function search(
 	prompt: Prompt,
-	opts: { top_k?: number; rawPrompt?: string; weights?: Weights; task_type?: number } = {}
+	opts: {
+		top_k?: number;
+		rawPrompt?: string;
+		weights?: Weights;
+		task_type?: number;
+		search_regions?: string[];
+	} = {}
 ): Promise<SearchOut> {
 	const body = {
 		prompt: opts.rawPrompt ?? '',
@@ -78,7 +84,9 @@ export async function search(
 		top_k: opts.top_k ?? 100,
 		weights: opts.weights ?? null,
 		// Ép loại task thay vì để LLM đoán. Web biết chắc nên không có lý do để đoán.
-		task_type: opts.task_type ?? null
+		task_type: opts.task_type ?? null,
+		search_regions:
+			opts.search_regions && opts.search_regions.length > 0 ? opts.search_regions : null
 	};
 	const r = await req<{ count: number; parsed: any; results: Candidate[] }>('/search', {
 		method: 'POST',
