@@ -6,9 +6,8 @@
         DragDropVerticalIcon,
         Alert02Icon,
     } from "@hugeicons/core-free-icons";
-    import { frameUrl } from "$lib/api";
+    import { frameUrl, imageUrl } from "$lib/api";
     import { ws } from "$lib/store.svelte";
-	import { queuedImage } from '$lib/imgqueue';
     import {
         MAX_ANSWER_CHARS,
         MAX_ANSWERS,
@@ -236,11 +235,22 @@
                             onclick={() => zoomAnswer(a, f)}
                             title="Bấm để xem phóng to · clip 5s · video gốc"
                             class="ph ph-{f.keyframe_n % 8} group/thumb relative h-10 w-16 min-w-0 shrink cursor-pointer overflow-hidden rounded-[5px] border border-ink-800 transition-all hover:border-brand hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-brand">
+                            <!-- Ảnh thẳng, KHÔNG qua hàng đợi: danh sách đáp án ngắn nên
+                                 không có nguy cơ dồn request như lưới 100 ô, mà đi thẳng
+                                 thì mới gắn được `onerror` để rơi về ảnh keyframe. -->
                             <img
-                                use:queuedImage={src(f)}
+                                src={src(f)}
                                 alt=""
                                 loading="lazy"
                                 decoding="async"
+                                onerror={(e) => {
+                                    // Backend cũ chưa có /frame -> 404. Rơi về ảnh keyframe,
+                                    // lệch vài frame còn hơn để ô trống.
+                                    const el = e.currentTarget as HTMLImageElement;
+                                    const fb = imageUrl(f.video_id, f.keyframe_n, 256);
+                                    if (el.src !== fb) el.src = fb;
+                                }}
+                                onload={(e) => e.currentTarget.classList.add('is-loaded')}
                                 class="thumb size-full object-cover transition-transform group-hover/thumb:scale-105" />
                         </button>
                     {/each}
