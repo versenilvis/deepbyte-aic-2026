@@ -169,7 +169,13 @@
         // vào cùng một đáp án. Khác bản cũ ở chỗ KHÔNG còn ép đủ n_events, ép cùng
         // video hay ép tăng dần - ba thứ đó chỉ cản chứ không cứu được gì.
         else if (query.task === "trake" && target) ws.appendFrame(query, target, c);
-        else ws.addAnswer(query, c);
+        else {
+            const id = ws.addAnswer(query, c);
+            // TRAKE: bấm ô đầu tạo chuỗi rồi CHỌN LUÔN nó, nên các ô bấm tiếp nối vào
+            // cùng một dòng. Không làm vậy thì mỗi lần bấm đẻ một đáp án riêng và file
+            // nộp ra mỗi frame một dòng - đúng lỗi vừa gặp.
+            if (query.task === "trake" && id) target = id;
+        }
     }
 
     function onKey(e: KeyboardEvent) {

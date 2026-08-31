@@ -118,13 +118,16 @@ class Workspace {
         this.save();
     }
 
-	addAnswer(q: Query, c: Candidate) {
+	/** Trả về id đáp án vừa tạo, để TRAKE nối frame tiếp theo vào đúng chuỗi đó. */
+	addAnswer(q: Query, c: Candidate): string | null {
 		if (q.answers.length >= MAX_ANSWERS) {
 			this.error = `Đã đủ ${MAX_ANSWERS} đáp án, không nộp thêm được`;
-			return;
+			return null;
 		}
-		q.answers.push({ id: crypto.randomUUID(), frames: [toRef(c)] });
+		const id = crypto.randomUUID();
+		q.answers.push({ id, frames: [toRef(c)] });
 		this.save();
+		return id;
 	}
 
 	toggleAnswer(q: Query, c: Candidate) {

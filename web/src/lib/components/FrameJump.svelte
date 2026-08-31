@@ -96,7 +96,11 @@
 		);
 		if (i >= 0) ws.removeAnswer(query, query.answers[i].id);
 		else if (query.task === 'trake' && target) ws.appendFrame(query, target, c);
-		else ws.addAnswer(query, c);
+		else {
+			const id = ws.addAnswer(query, c);
+			// Xem chú thích cùng chỗ trong ResultGrid: chọn luôn chuỗi vừa tạo.
+			if (query.task === 'trake' && id) target = id;
+		}
 	}
 
 	/** Giây -> "m:ss.s". Đọc "3:14.0" nhanh hơn nhiều so với "194.0s". */
