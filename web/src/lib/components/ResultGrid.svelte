@@ -25,17 +25,40 @@
     let cols = $state(4);
     let cursor = $state(0);
     let sortMode = $state<"rank" | "video">("rank");
+    /**
+     * Lọc theo nhóm L. L26 chiếm 498/873 video (57% dữ liệu là bếp núc), nên câu
+     * thời sự mà không lọc thì hơn nửa lưới là nhiễu. Rỗng = không lọc.
+     */
+    let onlyGroups = $state<Set<string>>(new Set());
     /** TRAKE: đang gom frame vào đáp án nào. null = tạo đáp án mới. */
     let target = $state<string | null>(null);
     let grid = $state<HTMLDivElement | null>(null);
 
     /** TRAKE hiện MỘT ô mỗi đáp án (ảnh = frame của action đầu), không rải phẳng n frame. */
+    /** Các nhóm L thực sự có trong kết quả, kèm số ô - chỉ hiện nút cho nhóm có mặt. */
+    let groupCounts = $derived.by(() => {
+        const m = new Map<string, number>();
+        for (const c of query.candidates) {
+            const g = c.video_id.slice(0, 3);
+            m.set(g, (m.get(g) ?? 0) + 1);
+        }
+        return [...m].sort((a, b) => b[1] - a[1]);
+    });
+
     let shown = $derived.by(() => {
-        const list = query.candidates;
+        let list = query.candidates;
+        if (onlyGroups.size) list = list.filter((c) => onlyGroups.has(c.video_id.slice(0, 3)));
         if (!list.length || list[0].group == null) return list;
         const seen = new Set<number>();
         return list.filter((c) => (seen.has(c.group!) ? false : (seen.add(c.group!), true)));
     });
+
+    function toggleGroup(g: string) {
+        const next = new Set(onlyGroups);
+        next.has(g) ? next.delete(g) : next.add(g);
+        onlyGroups = next;
+        cursor = 0;
+    }
 
     let groups = $derived.by<VideoGroup[]>(() => {
         if (sortMode !== "video") return [];
@@ -211,6 +234,31 @@
             gom theo video
         </button>
     </div>
+
+    {#if groupCounts.length > 1}
+        <div class="flex items-center gap-1">
+            {#each groupCounts as [g, n] (g)}
+                <button
+                    type="button"
+                    class="tabular cursor-pointer rounded-md border px-1.5 py-0.5 font-mono text-[10.5px] transition-colors
+                    {onlyGroups.has(g)
+                        ? 'border-brand/60 bg-brand/12 text-brand'
+                        : 'border-ink-800 bg-ink-825 text-ink-500 hover:text-ink-300'}"
+                    title="Chỉ hiện {g} ({n} ô)"
+                    onclick={() => toggleGroup(g)}>
+                    {g} {n}
+                </button>
+            {/each}
+            {#if onlyGroups.size}
+                <button
+                    type="button"
+                    class="cursor-pointer px-1 text-[10.5px] text-ink-500 hover:text-ink-200"
+                    onclick={() => (onlyGroups = new Set())}>
+                    bỏ lọc
+                </button>
+            {/if}
+        </div>
+    {/if}
 
     {#if query.task === "trake"}
         <select

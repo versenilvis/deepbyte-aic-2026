@@ -18,6 +18,7 @@
 		items,
 		onclose,
 		onjump,
+		onsimilar,
 		onpick
 	}: {
 		query: Query;
@@ -26,6 +27,8 @@
 		onclose: () => void;
 		/** Mở tab "Nhảy tới frame" với đúng video + frame đang xem. */
 		onjump?: (video_id: string, frame_id: number) => void;
+		/** Tìm frame giống hình ảnh với frame đang xem. */
+		onsimilar?: (c: Candidate) => void;
 		onpick?: (frames: number[]) => void;
 	} = $props();
 
@@ -249,6 +252,17 @@
 							</button>
 						{/each}
 					</div>
+
+					{#if onsimilar}
+						<!-- Xoay từ "tả bằng lời" sang "giống cái này". Cảnh khó tả (góc máy,
+						     bố cục) thì đây là đường ra nhanh nhất. -->
+						<button
+							class="btn-secondary h-8 px-3 text-[11.5px]"
+							onclick={() => onsimilar?.(cur!)}
+							title="Tìm các frame giống hình ảnh với frame này">
+							Tìm ảnh giống
+						</button>
+					{/if}
 
 					{#if onjump}
 						<!-- Mang đúng video + frame đang xem sang tab "Nhảy tới frame".

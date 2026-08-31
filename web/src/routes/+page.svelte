@@ -15,6 +15,7 @@
         imageUrl,
         setBase,
         setKey,
+        similar,
         type Health,
     } from "$lib/api";
     import { buildZip, check, download } from "$lib/export";
@@ -533,6 +534,25 @@
 		query={ws.active}
 		items={zoom}
 		onclose={() => (zoom = null)}
+		onsimilar={async (c) => {
+			// Thay kết quả hiện tại bằng danh sách frame giống. Không mở tab mới:
+			// lưới kết quả đã có sẵn phím tắt, gom nhóm, chọn đáp án - dùng lại hết.
+			zoom = null;
+			ws.busy = true;
+			ws.error = null;
+			try {
+				const rows = await similar(c.video_id, c.orig_frame_idx ?? c.frame_id, 100);
+				if (ws.active) {
+					ws.active.candidates = rows;
+					ws.save();
+				}
+				activeTab = "search";
+			} catch (e) {
+				ws.error = `Tìm ảnh giống không được: ${(e as Error).message}`;
+			} finally {
+				ws.busy = false;
+			}
+		}}
 		onjump={(video_id: string, frame_id: number) => {
 			// Đóng Inspector rồi mở tab Nhảy tới frame tại đúng mốc đó.
 			jumpSeed = { video_id, frame_id, at: Date.now() };

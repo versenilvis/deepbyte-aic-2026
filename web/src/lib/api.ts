@@ -100,6 +100,26 @@ const CLIP_V = 2;
  * backend phải gọi ffmpeg, nên chỉ dùng cho danh sách đáp án - đừng dùng cho
  * lưới 100 kết quả.
  */
+/**
+ * Frame giống về HÌNH ẢNH với frame cho trước.
+ *
+ * Dùng khi cảnh khó tả bằng lời: tìm được một frame tàm tạm bằng chữ rồi xoay
+ * sang đây, nhanh hơn nhiều so với nghĩ thêm câu mô tả cho CLIP.
+ *
+ * Nhận `orig_frame_idx` chứ KHÔNG phải `frame_id`: metadata đánh chỉ mục theo cái
+ * đầu, hai số lệch nhau tối đa 1 frame.
+ */
+export async function similar(
+	video_id: string,
+	orig_frame_idx: number,
+	top_k = 100
+): Promise<Candidate[]> {
+	const r = await req<{ results: Candidate[] }>(
+		`/similar?video_id=${encodeURIComponent(video_id)}&frame_id=${orig_frame_idx}&top_k=${top_k}`
+	);
+	return r.results;
+}
+
 export function frameUrl(video_id: string, frame_id: number, w = 512): string {
 	return `${getBase()}/frame?video_id=${video_id}&frame_id=${frame_id}&w=${w}&key=${encodeURIComponent(getKey())}`;
 }
