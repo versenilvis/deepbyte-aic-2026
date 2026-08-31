@@ -131,12 +131,17 @@ class Workspace {
 	}
 
 	toggleAnswer(q: Query, c: Candidate) {
-		const existingIndex = q.answers.findIndex((a) =>
-			a.frames.some((f) => f.video_id === c.video_id && f.frame_id === c.frame_id)
+		const a = q.answers.find((ans) =>
+			ans.frames.some((f) => f.video_id === c.video_id && (f.frame_id === c.frame_id || (c.keyframe_n && f.keyframe_n === c.keyframe_n)))
 		);
-		if (existingIndex >= 0) {
-			q.answers.splice(existingIndex, 1);
-			this.save();
+		if (a) {
+			if (q.task === 'trake' && a.frames.length > 1) {
+				this.removeFrame(q, a.id, c.frame_id);
+			} else {
+				this.removeAnswer(q, a.id);
+			}
+		} else if (q.task === 'trake') {
+			this.addTrakeFrame(q, c, null);
 		} else {
 			this.addAnswer(q, c);
 		}

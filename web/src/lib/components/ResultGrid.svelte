@@ -160,30 +160,10 @@
     }
 
     function toggle(c: Candidate) {
-        const a = query.answers.find((a) =>
-            a.frames.some((f) => f.video_id === c.video_id && f.frame_id === c.frame_id)
-        );
-        if (a) {
-            if (query.task === 'trake' && a.frames.length > 1) {
-                // xóa đúng frame, giữ lại chuỗi
-                ws.removeFrame(query, a.id, c.frame_id);
-            } else {
-                // KIS/QA hoặc TRAKE 1 frame duy nhất thì xóa cả answer
-                ws.removeAnswer(query, a.id);
-                if (target === a.id) target = null;
-            }
-        } else if (query.task === 'trake') {
-            // gom vào chuỗi cùng video nếu đã có (nhất quán với onpick của Inspector)
+        ws.toggleAnswer(query, c);
+        if (query.task === 'trake') {
             const sameVideo = query.answers.find((x) => x.frames[0]?.video_id === c.video_id);
-            if (sameVideo) {
-                ws.addTrakeFrame(query, c, sameVideo.id);
-                target = sameVideo.id;
-            } else {
-                const id = ws.addAnswer(query, c);
-                if (id) target = id;
-            }
-        } else {
-            ws.addAnswer(query, c);
+            target = sameVideo ? sameVideo.id : null;
         }
     }
 

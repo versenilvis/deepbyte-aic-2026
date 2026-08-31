@@ -91,15 +91,10 @@
 	}
 
 	function toggle(c: Candidate) {
-		const i = query.answers.findIndex((a) =>
-			a.frames.some((f) => f.video_id === c.video_id && (f.frame_id === c.frame_id || f.keyframe_n === c.keyframe_n))
-		);
-		if (i >= 0) ws.removeAnswer(query, query.answers[i].id);
-		else if (query.task === 'trake' && target) target = ws.appendFrame(query, target, c);
-		else {
-			const id = ws.addAnswer(query, c);
-			// Xem chú thích cùng chỗ trong ResultGrid: chọn luôn chuỗi vừa tạo.
-			if (query.task === 'trake' && id) target = id;
+		ws.toggleAnswer(query, c);
+		if (query.task === 'trake') {
+			const sameVideo = query.answers.find((x) => x.frames[0]?.video_id === c.video_id);
+			target = sameVideo ? sameVideo.id : null;
 		}
 	}
 
@@ -440,7 +435,7 @@
 
 					<!-- nút thêm / bỏ đáp án -->
 					<button
-						class="absolute top-1.5 right-1.5 flex size-[26px] cursor-pointer items-center justify-center rounded-lg shadow-lg backdrop-blur transition-colors {rank
+						class="group/pickbtn absolute top-1.5 right-1.5 flex size-[26px] cursor-pointer items-center justify-center rounded-lg shadow-lg backdrop-blur transition-colors {rank
 							? 'bg-ok text-ink-950 hover:bg-bad'
 							: 'bg-ink-950/78 text-ink-200 hover:bg-brand hover:text-ink-950'}"
 						title={rank ? 'Bỏ khỏi danh sách nộp' : 'Thêm vào danh sách nộp · Space'}
@@ -450,7 +445,16 @@
 							toggle(c);
 						}}
 					>
-						<HugeiconsIcon icon={rank ? Tick02Icon : PlusSignIcon} size={15} strokeWidth={2.3} />
+						{#if rank}
+							<span class="group-hover/pickbtn:hidden">
+								<HugeiconsIcon icon={Tick02Icon} size={15} strokeWidth={2.3} />
+							</span>
+							<span class="hidden group-hover/pickbtn:block">
+								<HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.3} />
+							</span>
+						{:else}
+							<HugeiconsIcon icon={PlusSignIcon} size={15} strokeWidth={2.3} />
+						{/if}
 					</button>
 
 					<!-- thông tin chân ảnh -->
