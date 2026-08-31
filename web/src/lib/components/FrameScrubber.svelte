@@ -5,9 +5,10 @@
 		PauseIcon,
 		ArrowLeft01Icon,
 		ArrowRight01Icon,
-		Target02Icon
+		Target02Icon,
+		Tick02Icon
 	} from '@hugeicons/core-free-icons';
-	import { clipUrl, imageUrl } from '$lib/api';
+	import { clipUrl, frameUrl, imageUrl } from '$lib/api';
 	import { scrub } from '$lib/scrub.svelte';
 
 	/**
@@ -114,6 +115,17 @@
 		seekTo(frame + d);
 	}
 
+	/** Frame vừa bấm chọn - nháy xác nhận, không thì bấm xong chẳng thấy gì đổi. */
+	let justPicked = $state<number | null>(null);
+	let pickTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function pick() {
+		onpick?.(frame);
+		justPicked = frame;
+		clearTimeout(pickTimer);
+		pickTimer = setTimeout(() => (justPicked = null), 1400);
+	}
+
 	function toggle() {
 		if (!el) return;
 		if (!playing) {
@@ -195,8 +207,15 @@
 		     Không có lớp này thì <video> vẽ frame ĐẦU clip trước rồi mới nhảy - người
 		     xem thấy một khung sai chớp qua, mà bộ đếm đã ghi frame trung tâm. -->
 		{#if !ready}
+			<!-- Ảnh phủ phải là ĐÚNG frame trung tâm, không phải keyframe: hai cái lệch
+			     nhau thì lúc chờ tua người xem thấy một cảnh, tua xong lại ra cảnh khác. -->
 			<img
-				src={imageUrl(video_id, keyframe_n, 1280)}
+				src={frameUrl(video_id, frame_id, 1280)}
+				onerror={(e) => {
+					const el = e.currentTarget as HTMLImageElement;
+					const fb = imageUrl(video_id, keyframe_n, 1280);
+					if (el.src !== fb) el.src = fb;
+				}}
 				alt=""
 				class="pointer-events-none absolute inset-0 max-h-[52vh] w-full object-contain"
 			/>
@@ -292,8 +311,16 @@
 		/>
 
 		{#if onpick}
-			<button class="btn-primary ml-auto h-11 rounded-[9px] px-5 text-[13.5px]" onclick={() => onpick?.(frame)}>
-				Chọn {frame}
+			<button
+				class="ml-auto flex h-11 items-center gap-1.5 rounded-[9px] px-5 text-[13.5px] font-medium transition-colors
+				{justPicked === frame ? 'bg-ok text-ink-950' : 'bg-brand text-ink-950 hover:brightness-110'}"
+				onclick={pick}>
+				{#if justPicked === frame}
+					<HugeiconsIcon icon={Tick02Icon} size={15} strokeWidth={2.4} />
+					Đã chọn {frame}
+				{:else}
+					Chọn {frame}
+				{/if}
 			</button>
 		{/if}
 	</div>

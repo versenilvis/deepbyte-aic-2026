@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Cancel01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
-	import { imageUrl, videoUrl } from '$lib/api';
+	import { Cancel01Icon, Alert02Icon, Tick02Icon } from '@hugeicons/core-free-icons';
+	import { frameUrl, imageUrl, videoUrl } from '$lib/api';
 	import FrameScrubber from './FrameScrubber.svelte';
 	import { ws } from '$lib/store.svelte';
 	import type { Candidate, Query } from '$lib/types';
@@ -43,6 +43,16 @@
 	 *  đã đo: timestamp_sec == frame_idx / fps trên mọi video) nên quy đổi thẳng từ
 	 *  currentTime là chính xác, không cần mốc bù như clip 5s. */
 	let fullFrame = $state(0);
+	/** Frame vừa bấm chọn - dùng để nháy xác nhận, người dùng cần thấy là đã ăn. */
+	let justPicked = $state<number | null>(null);
+	let pickTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function pickFrame(f: number) {
+		picked[active] = f;
+		justPicked = f;
+		clearTimeout(pickTimer);
+		pickTimer = setTimeout(() => (justPicked = null), 1400);
+	}
 	/** frame đang chọn cho từng action, khởi tạo từ kết quả search. */
 	let picked = $state<number[]>([]);
 
@@ -166,17 +176,34 @@
 
 						{#if onpick}
 							<button
-								class="btn-primary absolute right-3 bottom-16 h-8 px-3 text-[12px]"
-								onclick={() => (picked[active] = fullFrame)}>
-								Chọn frame {fullFrame}
+								class="absolute right-3 bottom-16 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-colors
+								{justPicked === fullFrame
+									? 'bg-ok text-ink-950'
+									: 'bg-brand text-ink-950 hover:brightness-110'}"
+								onclick={() => pickFrame(fullFrame)}>
+								{#if justPicked === fullFrame}
+									<HugeiconsIcon icon={Tick02Icon} size={14} strokeWidth={2.4} />
+									Đã chọn {fullFrame}
+								{:else}
+									Chọn frame {fullFrame}
+								{/if}
 							</button>
 						{/if}
 					</div>
 				{/key}
 			{:else}
 				<div class="ph ph-{cur.keyframe_n % 8} flex max-h-[62vh] min-h-64 items-center justify-center overflow-hidden rounded-xl">
+					<!-- Ảnh của ĐÚNG frame đang chọn, không phải keyframe. Dùng keyframe thì
+					     ô xem trước bên danh sách đáp án (đã lấy theo frame_id) và ảnh ở đây
+					     là hai cảnh khác nhau, cùng mang một số frame - nhìn là loạn. -->
 					<img
-						src={imageUrl(cur.video_id, cur.keyframe_n, 1280)}
+						src={frameUrl(cur.video_id, picked[active] ?? cur.frame_id, 1280)}
+						onerror={(e) => {
+							// Backend cũ chưa có /frame -> rơi về ảnh keyframe.
+							const el = e.currentTarget as HTMLImageElement;
+							const fb = imageUrl(cur!.video_id, cur!.keyframe_n, 1280);
+							if (el.src !== fb) el.src = fb;
+						}}
 						alt=""
 						onload={(e) => e.currentTarget.classList.add('is-loaded')}
 						class="thumb max-h-[62vh] w-full object-contain"
