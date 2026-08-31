@@ -7,27 +7,27 @@ function cell(v: string | number): string {
 	return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-export function toCsv(q: Query): string {
-	// TRAKE nộp MỖI FRAME MỘT DÒNG `video_id,frame_id`, không phải gộp cả chuỗi vào
-	// một dòng. Xác nhận qua hai lần nộp thật. Trải phẳng ở đây nên đáp án cũ còn
-	// nhiều frame vẫn xuất đúng, khỏi phải sửa dữ liệu đang có.
-	if (q.task === 'trake') {
-		return q.answers
-			.flatMap((a) => a.frames.map((f) => [f.video_id, f.frame_id]))
-			.slice(0, MAX_ANSWERS)
-			.map((row) => row.map(cell).join(','))
-			.join('\n');
-	}
+/** Luôn bọc nháy kép, kể cả khi không bắt buộc. */
+function quoted(v: string): string {
+	return `"${String(v).replace(/"/g, '""')}"`;
+}
 
+export function toCsv(q: Query): string {
 	return q.answers
 		.slice(0, MAX_ANSWERS)
 		.map((a) => {
+			const vid = a.frames[0]?.video_id ?? '';
 			const ids = a.frames.map((f) => f.frame_id);
-			const row =
-				q.task === 'qa'
-					? [a.frames[0]?.video_id ?? '', ids[0] ?? '', a.text ?? '']
-					: [a.frames[0]?.video_id ?? '', ...ids];
-			return row.map(cell).join(',');
+
+			// Q&A: đáp án LUÔN bọc nháy kép, không chỉ khi có dấu phẩy. Bọc thừa thì
+			// mọi bộ đọc CSV đều hiểu, còn quên bọc một câu có dấu phẩy là hỏng cả
+			// dòng - mà mỗi gói chỉ có 3 lượt nộp.
+			if (q.task === 'qa')
+				return [cell(vid), cell(ids[0] ?? ''), quoted(a.text ?? '')].join(',');
+
+			// KIS một frame, TRAKE cả chuỗi: `video_id,f1,f2,...` MỘT dòng mỗi đáp án.
+			// Nhiều đáp án thì nhiều dòng, kể cả khi trùng video.
+			return [vid, ...ids].map(cell).join(',');
 		})
 		.join('\n');
 }

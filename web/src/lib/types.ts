@@ -85,12 +85,9 @@ export function taskOf(queryId: string): Task {
 
 export function validate(q: Query): string[] {
     const errs: string[] = [];
-    // TRAKE tính theo DÒNG nộp, mà mỗi frame là một dòng.
-    const rows =
-        q.task === "trake"
-            ? q.answers.reduce((n, a) => n + a.frames.length, 0)
-            : q.answers.length;
-    if (rows > MAX_ANSWERS) errs.push(`${rows} dòng, tối đa ${MAX_ANSWERS}`);
+    // Mỗi đáp án là một dòng nộp, kể cả TRAKE nhiều frame.
+    if (q.answers.length > MAX_ANSWERS)
+        errs.push(`${q.answers.length} đáp án, tối đa ${MAX_ANSWERS}`);
 
     q.answers.forEach((a, i) => {
         const at = `#${i + 1}`;

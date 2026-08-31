@@ -25,6 +25,8 @@
     let cols = $state(4);
     let cursor = $state(0);
     let sortMode = $state<"rank" | "video">("rank");
+    /** TRAKE: đang gom frame vào đáp án nào. null = mỗi lần bấm tạo đáp án mới. */
+    let target = $state<string | null>(null);
     /**
      * Lọc theo nhóm L. L26 chiếm 498/873 video (57% dữ liệu là bếp núc), nên câu
      * thời sự mà không lọc thì hơn nửa lưới là nhiễu. Rỗng = không lọc.
@@ -163,8 +165,10 @@
             ),
         );
         if (i >= 0) ws.removeAnswer(query, query.answers[i].id);
-        // TRAKE cũng chỉ là một frame một đáp án như KIS: định dạng nộp là mỗi frame
-        // một dòng, không còn khái niệm chuỗi action để gắn frame vào.
+        // TRAKE nộp `video_id,f1,f2,...` một dòng mỗi đáp án, nên vẫn cần gom frame
+        // vào cùng một đáp án. Khác bản cũ ở chỗ KHÔNG còn ép đủ n_events, ép cùng
+        // video hay ép tăng dần - ba thứ đó chỉ cản chứ không cứu được gì.
+        else if (query.task === "trake" && target) ws.appendFrame(query, target, c);
         else ws.addAnswer(query, c);
     }
 
@@ -254,6 +258,18 @@
                 </button>
             {/if}
         </div>
+    {/if}
+
+    {#if query.task === "trake"}
+        <select
+            class="cursor-pointer rounded-lg border border-ink-800 bg-ink-825 px-2.5 py-1.5 text-xs
+        text-ink-200 hover:border-ink-700"
+            bind:value={target}>
+            <option value={null}>tạo đáp án mới</option>
+            {#each query.answers as a, i (a.id)}
+                <option value={a.id}>gắn vào #{i + 1} ({a.frames.length} frame)</option>
+            {/each}
+        </select>
     {/if}
 
     <div class="ml-auto flex items-center gap-5">

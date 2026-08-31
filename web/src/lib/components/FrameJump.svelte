@@ -29,6 +29,8 @@
 		seed?: { video_id: string; frame_id: number; at: number } | null;
 	} = $props();
 
+	/** TRAKE: đang gom frame vào đáp án nào. null = tạo đáp án mới. */
+	let target = $state<string | null>(null);
 	let videoId = $state('');
 	let frameInput = $state<number | string>('');
 	/** 'frame' = gõ thẳng số frame; 'time' = gõ phút + giây. */
@@ -93,7 +95,7 @@
 			a.frames.some((f) => f.video_id === c.video_id && (f.frame_id === c.frame_id || f.keyframe_n === c.keyframe_n))
 		);
 		if (i >= 0) ws.removeAnswer(query, query.answers[i].id);
-		// TRAKE cũng một frame một đáp án: định dạng nộp là mỗi frame một dòng.
+		else if (query.task === 'trake' && target) ws.appendFrame(query, target, c);
 		else ws.addAnswer(query, c);
 	}
 
@@ -294,6 +296,17 @@
 		</button>
 	</div>
 
+	{#if query.task === 'trake'}
+		<select
+			class="cursor-pointer rounded-lg border border-ink-800 bg-ink-825 px-2.5 py-1.5 text-xs
+			text-ink-200 hover:border-ink-700"
+			bind:value={target}>
+			<option value={null}>tạo đáp án mới</option>
+			{#each query.answers as a, i (a.id)}
+				<option value={a.id}>gắn vào #{i + 1} ({a.frames.length} frame)</option>
+			{/each}
+		</select>
+	{/if}
 
 	<div class="ml-auto flex items-center gap-5">
 		<span class="hidden items-center gap-2 text-[11px] text-ink-500 xl:flex">
