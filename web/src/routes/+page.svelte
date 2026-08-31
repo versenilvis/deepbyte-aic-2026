@@ -607,7 +607,31 @@
 			zoom = null;
 		}}
 		onpick={(frames: number[]) => {
-			if (ws.active && zoom) ws.addAnswerFrames(ws.active, zoom, frames);
+			if (!ws.active || !zoom) { zoom = null; return; }
+			const q = ws.active;
+			if (q.task === 'trake') {
+				// gom vào answer của cùng video nếu đã có, tránh xé thành nhiều row
+				const vid = zoom[0]?.video_id;
+				const existing = vid ? q.answers.find((a) => a.frames[0]?.video_id === vid) : undefined;
+				if (existing) {
+					const newRefs = zoom.map((c, i) => ({
+						video_id: c.video_id, frame_id: frames[i] ?? c.frame_id,
+						keyframe_n: c.keyframe_n, pts_time: c.pts_time, fps: c.fps
+					}));
+					// thêm frame chưa có, tránh trùng
+					for (const ref of newRefs) {
+						if (!existing.frames.some((f) => f.frame_id === ref.frame_id)) {
+							existing.frames.push(ref);
+						}
+					}
+					existing.frames.sort((a, b) => a.frame_id - b.frame_id);
+					ws.save();
+				} else {
+					ws.addAnswerFrames(q, zoom, frames);
+				}
+			} else {
+				ws.addAnswerFrames(q, zoom, frames);
+			}
 			zoom = null;
 		}}
 	/>

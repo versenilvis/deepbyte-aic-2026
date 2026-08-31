@@ -230,29 +230,36 @@
                      to quá 64px khi chỉ có một - w-16 vừa là trần vừa là cỡ mặc định. -->
                 <div class="mt-1.5 flex gap-1 overflow-hidden pl-[26px]">
                     {#each a.frames as f (f.frame_id)}
-                        <button
-                            type="button"
-                            onclick={() => zoomAnswer(a, f)}
-                            title="Bấm để xem phóng to · clip 5s · video gốc"
-                            class="ph ph-{f.keyframe_n % 8} group/thumb relative h-10 w-16 min-w-0 shrink cursor-pointer overflow-hidden rounded-[5px] border border-ink-800 transition-all hover:border-brand hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-brand">
-                            <!-- Ảnh thẳng, KHÔNG qua hàng đợi: danh sách đáp án ngắn nên
-                                 không có nguy cơ dồn request như lưới 100 ô, mà đi thẳng
-                                 thì mới gắn được `onerror` để rơi về ảnh keyframe. -->
-                            <img
-                                src={src(f)}
-                                alt=""
-                                loading="lazy"
-                                decoding="async"
-                                onerror={(e) => {
-                                    // Backend cũ chưa có /frame -> 404. Rơi về ảnh keyframe,
-                                    // lệch vài frame còn hơn để ô trống.
-                                    const el = e.currentTarget as HTMLImageElement;
-                                    const fb = imageUrl(f.video_id, f.keyframe_n, 256);
-                                    if (el.src !== fb) el.src = fb;
-                                }}
-                                onload={(e) => e.currentTarget.classList.add('is-loaded')}
-                                class="thumb size-full object-cover transition-transform group-hover/thumb:scale-105" />
-                        </button>
+                        <div class="group/thumb relative h-10 w-16 min-w-0 shrink">
+                            <button
+                                type="button"
+                                onclick={() => zoomAnswer(a, f)}
+                                title="Bấm để xem phóng to · clip 5s · video gốc"
+                                class="ph ph-{f.keyframe_n % 8} size-full cursor-pointer overflow-hidden rounded-[5px] border border-ink-800 transition-all hover:border-brand hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-brand">
+                                <img
+                                    src={src(f)}
+                                    alt=""
+                                    loading="lazy"
+                                    decoding="async"
+                                    onerror={(e) => {
+                                        const el = e.currentTarget as HTMLImageElement;
+                                        const fb = imageUrl(f.video_id, f.keyframe_n, 256);
+                                        if (el.src !== fb) el.src = fb;
+                                    }}
+                                    onload={(e) => e.currentTarget.classList.add('is-loaded')}
+                                    class="thumb size-full object-cover transition-transform group-hover/thumb:scale-105" />
+                            </button>
+                            {#if query.task === "trake"}
+                                <!-- nút xóa frame đơn lẻ khỏi chuỗi TRAKE -->
+                                <button
+                                    type="button"
+                                    onclick={(e) => { e.stopPropagation(); ws.removeFrame(query, a.id, f.frame_id); }}
+                                    title="Xóa frame này khỏi chuỗi"
+                                    class="absolute top-0.5 right-0.5 hidden size-4 items-center justify-center rounded bg-ink-950/80 text-bad group-hover/thumb:flex hover:bg-bad hover:text-ink-950">
+                                    <HugeiconsIcon icon={Cancel01Icon} size={9} strokeWidth={2.5} />
+                                </button>
+                            {/if}
+                        </div>
                     {/each}
                 </div>
 

@@ -149,10 +149,32 @@ class Workspace {
 	 * MỘT `video_id` đứng đầu, nhét frame video khác vào là ra dòng sai mà không có
 	 * dấu hiệu gì trên giao diện.
 	 */
-	appendFrame(q: Query, answerId: string, c: Candidate): string | null {
-		const a = q.answers.find((x) => x.id === answerId);
+	/**
+	 * Thêm một frame vào đáp án TRAKE.
+	 *
+	 * `mode`:
+	 *   null    - TỰ GOM THEO VIDEO: nối vào chuỗi đang có của cùng video, chưa có
+	 *             thì tạo mới. Đây là việc muốn làm trong hầu hết trường hợp.
+	 *   "new"   - luôn tạo chuỗi mới, dùng khi cần HAI chuỗi từ CÙNG một video.
+	 *   <id>    - ép nối vào đúng chuỗi đó.
+	 *
+	 * Bản trước cho `target` bám theo lần bấm cuối, nên bấm A, A, B, A thì lần cuối
+	 * `target` đang ở B, khác video nên tách chuỗi mới - video A bị xé làm hai dòng.
+	 * Gom theo video thì thứ tự bấm không còn ảnh hưởng gì.
+	 */
+	addTrakeFrame(q: Query, c: Candidate, mode: string | null): string | null {
+		let a =
+			mode === 'new'
+				? undefined
+				: mode
+					? q.answers.find((x) => x.id === mode)
+					: q.answers.find((x) => x.frames[0]?.video_id === c.video_id);
+
+		// Ép nối vào một chuỗi khác video thì không nối được: một dòng nộp chỉ có MỘT
+		// video_id đứng đầu.
+		if (a && a.frames[0] && a.frames[0].video_id !== c.video_id) a = undefined;
+
 		if (!a) return this.addAnswer(q, c);
-		if (a.frames[0] && a.frames[0].video_id !== c.video_id) return this.addAnswer(q, c);
 		a.frames.push(toRef(c));
 		a.frames.sort((p, r) => p.frame_id - r.frame_id);
 		this.save();
@@ -161,6 +183,15 @@ class Workspace {
 
 	removeAnswer(q: Query, id: string) {
 		q.answers = q.answers.filter((a) => a.id !== id);
+		this.save();
+	}
+
+	/** Xóa 1 frame ra khỏi answer TRAKE. Nếu còn 0 frame thì xóa luôn cả answer. */
+	removeFrame(q: Query, answerId: string, frameId: number) {
+		const a = q.answers.find((x) => x.id === answerId);
+		if (!a) return;
+		a.frames = a.frames.filter((f) => f.frame_id !== frameId);
+		if (a.frames.length === 0) q.answers = q.answers.filter((x) => x.id !== answerId);
 		this.save();
 	}
 
