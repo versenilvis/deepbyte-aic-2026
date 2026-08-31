@@ -61,6 +61,18 @@
     let prevCandidates = $state<Candidate[] | null>(null);
     let similarFrom = $state("");
 
+    /* Tìm kiếm mới -> kết quả gốc cũ hết nghĩa, gỡ thanh "đang xem ảnh giống".
+       Bám `searchedAt` (SearchPanel ghi mỗi lần tìm) thay vì luồn thêm một prop. */
+    let lastSearchedAt = $state(0);
+    $effect(() => {
+        const t = ws.active?.searchedAt ?? 0;
+        if (t !== lastSearchedAt) {
+            lastSearchedAt = t;
+            prevCandidates = null;
+            similarFrom = "";
+        }
+    });
+
     function restoreSearch() {
         if (!ws.active || !prevCandidates) return;
         ws.active.candidates = prevCandidates;
