@@ -92,9 +92,11 @@ export function validate(q: Query): string[] {
     q.answers.forEach((a, i) => {
         const at = `#${i + 1}`;
         if (q.task === "trake") {
-            // TRAKE nộp mỗi frame một dòng nên các frame ĐỘC LẬP: không ép đủ n_events,
-            // không ép cùng video, không ép tăng dần. Ba ràng buộc đó là của định dạng
-            // gộp cả chuỗi vào một dòng - định dạng đó đã sai, xác nhận qua hai lần nộp.
+            // Không ép đủ n_events, không ép frame tăng dần - hai thứ đó chỉ cản.
+            // Nhưng CÙNG VIDEO thì bắt buộc: một dòng nộp chỉ có một video_id đứng
+            // đầu, frame video khác lọt vào là dòng đó sai mà nhìn không ra.
+            if (new Set(a.frames.map((f) => f.video_id)).size > 1)
+                errs.push(`${at}: các frame phải cùng 1 video`);
         } else if (a.frames.length !== 1) {
             errs.push(`${at}: ${q.task} chỉ được 1 frame`);
         }

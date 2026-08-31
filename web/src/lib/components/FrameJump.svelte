@@ -95,7 +95,7 @@
 			a.frames.some((f) => f.video_id === c.video_id && (f.frame_id === c.frame_id || f.keyframe_n === c.keyframe_n))
 		);
 		if (i >= 0) ws.removeAnswer(query, query.answers[i].id);
-		else if (query.task === 'trake' && target) ws.appendFrame(query, target, c);
+		else if (query.task === 'trake' && target) target = ws.appendFrame(query, target, c);
 		else {
 			const id = ws.addAnswer(query, c);
 			// Xem chú thích cùng chỗ trong ResultGrid: chọn luôn chuỗi vừa tạo.

@@ -168,7 +168,7 @@
         // TRAKE nộp `video_id,f1,f2,...` một dòng mỗi đáp án, nên vẫn cần gom frame
         // vào cùng một đáp án. Khác bản cũ ở chỗ KHÔNG còn ép đủ n_events, ép cùng
         // video hay ép tăng dần - ba thứ đó chỉ cản chứ không cứu được gì.
-        else if (query.task === "trake" && target) ws.appendFrame(query, target, c);
+        else if (query.task === "trake" && target) target = ws.appendFrame(query, target, c);
         else {
             const id = ws.addAnswer(query, c);
             // TRAKE: bấm ô đầu tạo chuỗi rồi CHỌN LUÔN nó, nên các ô bấm tiếp nối vào

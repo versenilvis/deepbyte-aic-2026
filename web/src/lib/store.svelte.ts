@@ -142,12 +142,21 @@ class Workspace {
 		}
 	}
 
-	appendFrame(q: Query, answerId: string, c: Candidate) {
+	/**
+	 * Nối frame vào một chuỗi TRAKE. Trả về id chuỗi thực sự nhận frame.
+	 *
+	 * Frame KHÁC VIDEO thì tách sang chuỗi mới thay vì nối bừa: một dòng nộp chỉ có
+	 * MỘT `video_id` đứng đầu, nhét frame video khác vào là ra dòng sai mà không có
+	 * dấu hiệu gì trên giao diện.
+	 */
+	appendFrame(q: Query, answerId: string, c: Candidate): string | null {
 		const a = q.answers.find((x) => x.id === answerId);
-		if (!a) return;
+		if (!a) return this.addAnswer(q, c);
+		if (a.frames[0] && a.frames[0].video_id !== c.video_id) return this.addAnswer(q, c);
 		a.frames.push(toRef(c));
 		a.frames.sort((p, r) => p.frame_id - r.frame_id);
 		this.save();
+		return a.id;
 	}
 
 	removeAnswer(q: Query, id: string) {
