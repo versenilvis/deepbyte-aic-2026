@@ -1,8 +1,9 @@
 <script lang="ts">
     import { HugeiconsIcon } from "@hugeicons/svelte";
-    import {
+	import {
         PlusSignIcon,
         Tick02Icon,
+        Cancel01Icon,
         Image01Icon,
     } from "@hugeicons/core-free-icons";
     import { imageUrl } from "$lib/api";
@@ -359,7 +360,7 @@
 
         <!-- NÚT THÊM / BỎ - luôn hiện, đủ to để bấm nhanh -->
         <button
-            class="absolute top-1.5 right-1.5 flex size-[26px] cursor-pointer items-center justify-center
+            class="group/pickbtn absolute top-1.5 right-1.5 flex size-[26px] cursor-pointer items-center justify-center
             rounded-lg shadow-lg backdrop-blur transition-colors
             {rank
                 ? 'bg-ok text-ink-950 hover:bg-bad'
@@ -372,10 +373,17 @@
                 cursor = i;
                 toggle(c);
             }}>
-            <HugeiconsIcon
-                icon={rank ? Tick02Icon : PlusSignIcon}
-                size={15}
-                strokeWidth={2.3} />
+            {#if rank}
+                <!-- đã chọn: mặc định ✓, hover → ✕ -->
+                <span class="group-hover/pickbtn:hidden">
+                    <HugeiconsIcon icon={Tick02Icon} size={15} strokeWidth={2.3} />
+                </span>
+                <span class="hidden group-hover/pickbtn:block">
+                    <HugeiconsIcon icon={Cancel01Icon} size={15} strokeWidth={2.3} />
+                </span>
+            {:else}
+                <HugeiconsIcon icon={PlusSignIcon} size={15} strokeWidth={2.3} />
+            {/if}
         </button>
 
         <div class="mt-1.5 flex items-baseline gap-2 px-0.5">
