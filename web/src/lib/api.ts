@@ -92,6 +92,18 @@ export function imageUrl(video_id: string, keyframe_n: number, w = 512): string 
  */
 const CLIP_V = 2;
 
+/**
+ * Ảnh của ĐÚNG frame đang chọn, trích từ video gốc.
+ *
+ * `imageUrl` chỉ trả được ảnh keyframe có sẵn; sau khi rà thanh tua sang frame
+ * khác thì nó vẫn là ảnh cũ, lệch hẳn với frame sắp nộp. Cái này chậm hơn vì
+ * backend phải gọi ffmpeg, nên chỉ dùng cho danh sách đáp án - đừng dùng cho
+ * lưới 100 kết quả.
+ */
+export function frameUrl(video_id: string, frame_id: number, w = 512): string {
+	return `${getBase()}/frame?video_id=${video_id}&frame_id=${frame_id}&w=${w}&key=${encodeURIComponent(getKey())}`;
+}
+
 export function clipUrl(video_id: string, frame_id: number, seconds = 5): string {
 	return `${getBase()}/clip?video_id=${video_id}&frame_id=${frame_id}&seconds=${seconds}&v=${CLIP_V}&key=${encodeURIComponent(getKey())}`;
 }

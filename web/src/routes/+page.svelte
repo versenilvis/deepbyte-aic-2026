@@ -51,6 +51,8 @@
     let zoom = $state<Candidate[] | null>(null);
     let showClip = $state(false);
     let activeTab = $state<"search" | "jump">("search");
+    /** Mốc Inspector đẩy sang tab Nhảy tới frame. `at` để bấm lại cùng frame vẫn chạy. */
+    let jumpSeed = $state<{ video_id: string; frame_id: number; at: number } | null>(null);
 
     onMount(async () => {
         ws.load();
@@ -341,6 +343,7 @@
                     {:else}
                         <FrameJump
                             query={ws.active}
+                            seed={jumpSeed}
                             onzoom={(g) => (zoom = g)} />
                     {/if}
                 {:else}
@@ -530,6 +533,12 @@
 		query={ws.active}
 		items={zoom}
 		onclose={() => (zoom = null)}
+		onjump={(video_id: string, frame_id: number) => {
+			// Đóng Inspector rồi mở tab Nhảy tới frame tại đúng mốc đó.
+			jumpSeed = { video_id, frame_id, at: Date.now() };
+			activeTab = "jump";
+			zoom = null;
+		}}
 		onpick={(frames: number[]) => {
 			if (ws.active && zoom) ws.addAnswerFrames(ws.active, zoom, frames);
 			zoom = null;

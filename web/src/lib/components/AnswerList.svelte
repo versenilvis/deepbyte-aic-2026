@@ -6,8 +6,7 @@
         DragDropVerticalIcon,
         Alert02Icon,
     } from "@hugeicons/core-free-icons";
-    import { imageUrl } from "$lib/api";
-    import { thumbs } from "$lib/thumbs.svelte";
+    import { frameUrl } from "$lib/api";
     import { ws } from "$lib/store.svelte";
 	import { queuedImage } from '$lib/imgqueue';
     import {
@@ -32,17 +31,15 @@
     // Ảnh của đáp án đi chung kho với lưới kết quả: cùng cỡ w=384 nên phần lớn đã
     // nằm sẵn trong cache từ lúc tìm kiếm. Nạp workspace 100 đáp án cũng chỉ tốn vài
     // request chia lô, thay vì 100 request lẻ bị 429 gần một nửa.
-    $effect(() => {
-        const frames = query.answers.flatMap((a) => a.frames);
-        if (frames.length) thumbs.want(frames);
-    });
-
-    /** Ảnh của một frame, hoặc null khi chưa có. Null -> chỉ hiện ô giữ chỗ. */
-    function src(f: { video_id: string; keyframe_n: number }): string | null {
-        return (
-            thumbs.get(f.video_id, f.keyframe_n) ??
-            (thumbs.legacy ? imageUrl(f.video_id, f.keyframe_n, 256) : null)
-        );
+    /**
+     * Ảnh của ĐÚNG frame trong đáp án.
+     *
+     * Trước đây lấy theo `keyframe_n` nên sau khi rà thanh tua sang frame khác,
+     * ảnh vẫn là keyframe cũ - nhìn một đằng nộp một nẻo. Đây là những frame THẬT
+     * SỰ đem nộp nên phải đúng, chấp nhận backend chạy ffmpeg chậm hơn.
+     */
+    function src(f: { video_id: string; frame_id: number }): string {
+        return frameUrl(f.video_id, f.frame_id, 256);
     }
 
     let dragFrom = $state<number | null>(null);
@@ -239,13 +236,12 @@
                             onclick={() => zoomAnswer(a, f)}
                             title="Bấm để xem phóng to · clip 5s · video gốc"
                             class="ph ph-{f.keyframe_n % 8} group/thumb relative h-10 w-16 min-w-0 shrink cursor-pointer overflow-hidden rounded-[5px] border border-ink-800 transition-all hover:border-brand hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-brand">
-                            {#if src(f)}
-                                <img
-									use:queuedImage={src(f)!}
-                                    alt=""
-                                    loading="lazy"
-                                    class="thumb size-full object-cover transition-transform group-hover/thumb:scale-105" />
-                            {/if}
+                            <img
+                                use:queuedImage={src(f)}
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                                class="thumb size-full object-cover transition-transform group-hover/thumb:scale-105" />
                         </button>
                     {/each}
                 </div>

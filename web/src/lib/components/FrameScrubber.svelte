@@ -85,10 +85,28 @@
 		return `${m}:${r.toFixed(2).padStart(5, '0')}`;
 	}
 
+	/* Kéo thanh tua bắn onpointermove hơn 60 lần/giây. Ghi thẳng `currentTime` mỗi
+	   lần là dồn ứ lệnh seek, video giật và tụt lại sau con trỏ.
+
+	   Tách làm hai: `frame` đổi NGAY (giao diện bám tay), còn lệnh seek gom lại và
+	   chỉ bắn MỘT lần mỗi khung hình vẽ. Vẫn ghi `currentTime` chính xác chứ không
+	   dùng `fastSeek` - cái đó nhảy về keyframe gần nhất, sai frame. */
+	let wantFrame: number | null = null;
+	let raf = 0;
+
+	function flushSeek() {
+		raf = 0;
+		if (!el || wantFrame === null) return;
+		const t = Math.max(0, (wantFrame - firstFrame) / fps);
+		wantFrame = null;
+		if (Math.abs(el.currentTime - t) > 1 / (fps * 2)) el.currentTime = t;
+	}
+
 	function seekTo(f: number) {
 		const t = clamp(f);
 		frame = t;
-		if (el) el.currentTime = Math.max(0, (t - firstFrame) / fps);
+		wantFrame = t;
+		if (!raf) raf = requestAnimationFrame(flushSeek);
 	}
 
 	function step(d: number) {
@@ -98,7 +116,13 @@
 
 	function toggle() {
 		if (!el) return;
-		playing ? el.pause() : el.play();
+		if (!playing) {
+			// play() trả về Promise và TỪ CHỐI nếu bị pause/seek chen ngang. Không bắt
+			// thì trình duyệt ném AbortError ra console mỗi lần bấm giữa lúc đang tua.
+			el.play().catch(() => {});
+		} else {
+			el.pause();
+		}
 	}
 
 	/** Chỉ bám theo video khi ĐANG PHÁT - lúc dừng thì giữ nguyên frame người dùng chọn. */

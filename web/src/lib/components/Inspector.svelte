@@ -17,12 +17,15 @@
 		query,
 		items,
 		onclose,
+		onjump,
 		onpick
 	}: {
 		query: Query;
 		/** Task 1/2: 1 phần tử. Task 3: n phần tử cùng group, đúng thứ tự action. */
 		items: Candidate[];
 		onclose: () => void;
+		/** Mở tab "Nhảy tới frame" với đúng video + frame đang xem. */
+		onjump?: (video_id: string, frame_id: number) => void;
 		onpick?: (frames: number[]) => void;
 	} = $props();
 
@@ -36,6 +39,10 @@
 	let active = $state(0);
 	/** 'video' = clip 5s co bo dem frame. 'full' = ca video goc. */
 	let mode = $state<'image' | 'video' | 'full'>('image');
+	/** Frame đang xem ở chế độ cả video. Dữ liệu là CFR bắt đầu từ 0 (frame_resolver
+	 *  đã đo: timestamp_sec == frame_idx / fps trên mọi video) nên quy đổi thẳng từ
+	 *  currentTime là chính xác, không cần mốc bù như clip 5s. */
+	let fullFrame = $state(0);
 	/** frame đang chọn cho từng action, khởi tạo từ kết quả search. */
 	let picked = $state<number[]>([]);
 
@@ -134,14 +141,37 @@
 				     frame dang xem. Backend chi tra file kem header Range nen mo tuc thi,
 				     khong cho ffmpeg dung clip nhu nhanh 'video'. -->
 				{#key `${cur.video_id}-${cur.frame_id}`}
-					<!-- svelte-ignore a11y_media_has_caption -->
-					<video
-						src={videoUrl(cur.video_id, cur.pts_time)}
-						controls
-						autoplay
-						preload="metadata"
-						class="max-h-[62vh] w-full rounded-xl bg-ink-950 object-contain"
-					></video>
+					<div class="relative">
+						<!-- svelte-ignore a11y_media_has_caption -->
+						<video
+							src={videoUrl(cur.video_id, cur.pts_time)}
+							controls
+							autoplay
+							preload="metadata"
+							ontimeupdate={(e) =>
+								(fullFrame = Math.round(e.currentTarget.currentTime * (cur!.fps ?? 25)))}
+							onseeked={(e) =>
+								(fullFrame = Math.round(e.currentTarget.currentTime * (cur!.fps ?? 25)))}
+							class="max-h-[62vh] w-full rounded-xl bg-ink-950 object-contain"
+						></video>
+
+						<!-- Bộ đếm frame. KHÔNG kèm nút lùi/tới từng frame như clip 5s: video
+						     đầy đủ dài hàng chục nghìn frame, mỗi lần nhích một frame trình
+						     duyệt phải giải mã lại từ keyframe gần nhất nên giật. Cần chính
+						     xác tới frame thì chuyển sang Clip 5s. -->
+						<div class="pointer-events-none absolute top-3 left-3 rounded-lg bg-ink-50 px-3 py-1.5 font-mono shadow-lg">
+							<span class="tabular text-lg font-bold tracking-[-0.02em] text-ink-950">{fullFrame}</span>
+							<span class="tabular ml-1.5 text-[11px] text-ink-500">{mmss(fullFrame / (cur.fps ?? 25))}</span>
+						</div>
+
+						{#if onpick}
+							<button
+								class="btn-primary absolute right-3 bottom-16 h-8 px-3 text-[12px]"
+								onclick={() => (picked[active] = fullFrame)}>
+								Chọn frame {fullFrame}
+							</button>
+						{/if}
+					</div>
 				{/key}
 			{:else}
 				<div class="ph ph-{cur.keyframe_n % 8} flex max-h-[62vh] min-h-64 items-center justify-center overflow-hidden rounded-xl">
@@ -172,6 +202,22 @@
 							</button>
 						{/each}
 					</div>
+
+					{#if onjump}
+						<!-- Mang đúng video + frame đang xem sang tab "Nhảy tới frame".
+						     Ở chế độ cả video thì lấy frame đang phát, hai chế độ kia lấy
+						     frame đã chọn - luôn là con số người dùng đang nhìn thấy. -->
+						<button
+							class="btn-secondary h-8 px-3 text-[11.5px]"
+							onclick={() =>
+								onjump?.(
+									cur!.video_id,
+									mode === 'full' ? fullFrame : (picked[active] ?? cur!.frame_id)
+								)}
+							title="Mở tab Nhảy tới frame tại đúng chỗ này">
+							Nhảy tới frame
+						</button>
+					{/if}
 
 					{#if existingAnswer}
 						<button

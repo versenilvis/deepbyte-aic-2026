@@ -18,7 +18,16 @@
 	/**
 	 * Duyệt thủ công các keyframe lân cận khi tìm kiếm tự động không ra kết quả mong muốn
 	 */
-	let { query, onzoom }: { query: Query; onzoom: (group: Candidate[]) => void } = $props();
+	let {
+		query,
+		onzoom,
+		/** Video + frame do Inspector đẩy sang. Đổi giá trị là tự nhảy, khỏi gõ tay. */
+		seed = null
+	}: {
+		query: Query;
+		onzoom: (group: Candidate[]) => void;
+		seed?: { video_id: string; frame_id: number; at: number } | null;
+	} = $props();
 
 	let videoId = $state('');
 	let frameInput = $state<number | string>('');
@@ -108,6 +117,18 @@
 		if (!videoId.trim()) return false;
 		if (mode === 'time') return minInput !== '' || secInput !== '';
 		return frameInput !== '' && frameInput !== null && frameInput !== undefined;
+	});
+
+	/* Nhận mốc từ Inspector. Mốc kèm `at` (thời điểm bấm) nên bấm lại CÙNG một
+	   frame vẫn kích hoạt - nếu so theo video+frame thì lần bấm thứ hai im lặng. */
+	let lastSeed = $state(0);
+	$effect(() => {
+		if (!seed || seed.at === lastSeed) return;
+		lastSeed = seed.at;
+		videoId = seed.video_id;
+		mode = 'frame';
+		frameInput = seed.frame_id;
+		jump();
 	});
 
 	async function jump() {
