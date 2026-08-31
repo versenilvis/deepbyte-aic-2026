@@ -137,11 +137,11 @@
         }
     });
 
-    /** Ảnh của một ô, hoặc null khi chưa có. Null -> chỉ hiện ô giữ chỗ, KHÔNG gọi mạng. */
+    /** Ảnh của một ô, ưu tiên lấy từ kho batch thumbs, nếu chưa có thì fallback sang imageUrl qua hàng đợi */
     function src(c: Candidate): string | null {
         return (
             thumbs.get(c.video_id, c.keyframe_n) ??
-            (thumbs.legacy ? imageUrl(c.video_id, c.keyframe_n) : null)
+            imageUrl(c.video_id, c.keyframe_n)
         );
     }
 
