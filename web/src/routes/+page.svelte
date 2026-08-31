@@ -52,6 +52,23 @@
     let zoom = $state<Candidate[] | null>(null);
     let showClip = $state(false);
     let activeTab = $state<"search" | "jump">("search");
+    /**
+     * Kết quả tìm kiếm gốc, cất lại trước khi "Tìm ảnh giống" ghi đè.
+     *
+     * Giữ ở đây chứ không nhét vào query: nó chỉ là bước lùi một cấp trong phiên làm
+     * việc, nhét vào query là phình localStorage thêm 100 ứng viên mỗi câu.
+     */
+    let prevCandidates = $state<Candidate[] | null>(null);
+    let similarFrom = $state("");
+
+    function restoreSearch() {
+        if (!ws.active || !prevCandidates) return;
+        ws.active.candidates = prevCandidates;
+        prevCandidates = null;
+        similarFrom = "";
+        ws.save();
+    }
+
     /** Mốc Inspector đẩy sang tab Nhảy tới frame. `at` để bấm lại cùng frame vẫn chạy. */
     let jumpSeed = $state<{ video_id: string; frame_id: number; at: number } | null>(null);
 
@@ -338,6 +355,20 @@
                     </div>
 
                     {#if activeTab === "search"}
+                        {#if prevCandidates}
+                            <div
+                                class="flex items-center gap-3 border-b border-brand/25 bg-brand/8 px-4 py-2 text-xs">
+                                <span class="text-ink-300">
+                                    Đang xem ảnh giống
+                                    <span class="font-mono text-brand-hi">{similarFrom}</span>
+                                </span>
+                                <button
+                                    class="btn-secondary ml-auto h-7 px-3 text-[11px]"
+                                    onclick={restoreSearch}>
+                                    Quay lại kết quả tìm kiếm
+                                </button>
+                            </div>
+                        {/if}
                         <ResultGrid
                             query={ws.active}
                             onzoom={(g) => (zoom = g)} />
@@ -543,6 +574,10 @@
 			try {
 				const rows = await similar(c.video_id, c.orig_frame_idx ?? c.frame_id, 100);
 				if (ws.active) {
+					// Chỉ cất khi đang ở kết quả gốc. Bấm "tìm ảnh giống" nhiều lần liên
+					// tiếp vẫn quay về được lần tìm kiếm đầu, không phải lần giống trước đó.
+					if (!prevCandidates) prevCandidates = ws.active.candidates;
+					similarFrom = `${c.video_id} · ${c.frame_id}`;
 					ws.active.candidates = rows;
 					ws.save();
 				}
