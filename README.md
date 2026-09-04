@@ -81,6 +81,6 @@ cd web && bun install && bun run dev     # http://localhost:5173
 ## Nộp bài
 Các thành viên sử dụng nút chia sẻ, và nộp lên phần subdomain tương ứng của mình, nhóm trưởng gom kết quả về, kiểm tra và nộp
 
-> [!WARING]
-> Dự án không có license, nếu bạn clone về thì tự quản lí, mình không chịu trách nhiệm nào và cũng sẽ không giải đáp bất cứ thấc mắc nào  
-> Key và domain trong dự án này sẽ xoá sau khi kết thúc nên sẽ không còn dùng được, bạn hãy tự sửa lại code để phù hợp hơn với mục đích sử dụng của mình
+> [!WARNING]
+> **Dự án không có license, nếu bạn clone về thì tự quản lí, mình không chịu trách nhiệm nào và cũng sẽ không giải đáp bất cứ thấc mắc nào**  
+> **Key và domain trong dự án này sẽ xoá sau khi kết thúc nên sẽ không còn dùng được, bạn hãy tự sửa lại code để phù hợp hơn với mục đích sử dụng của mình**
