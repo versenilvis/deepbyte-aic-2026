@@ -17,7 +17,7 @@
 - Team: Deepbyte
 - Bảng A
 
-# Huớng dẫn
+## Huớng dẫn
 
 1. **Tải file [AIC_2026.ipynb](kaggle/AIC_2026.ipynb), xong mở [Kaggle](https://www.kaggle.com/)**
 
@@ -32,6 +32,10 @@
 3. Thêm các secret keys cần thiết (`Add-ons` > `Secrets`)
    - `GOOGLE_API_KEY` - cho LLM tách prompt
    - `CF_TUNNEL_TOKEN` - cho hostname cố định
+
+> [!IMPORTANT]
+> Phần `CF_TUNNEL_TOKEN` hãy tìm theo từ khoá "hướng dẫn tạo Cloudflare Tunnel Zero Trust", có thể nhờ AI hướng dẫn cho để setup vì nếu viết ra hướng dẫn tạo key này sẽ rất dài dòng
+  
 4. Panel phải, ở phần `Session options`:
  - **Accelerator: GPU T4 x2**
  - **Internet: On** (để `pip install`)
@@ -66,47 +70,17 @@ Giới hạn phiên: tối đa 12 tiếng, idle timeout 20–60 phút nếu khô
 
 ---
 
-## Cấu trúc notebook
-
-| Cell | Việc                                         | Bắt buộc?        |
-| ---- | -------------------------------------------- | ---------------- |
-| 1–5  | search (code gốc `searcher.py`)              | ✅                |
-| 6–8  | API + tunnel → `aic.verse.id.vn`             | chỉ khi dùng web |
-| 9–10 | xuất `aic-workspace.json` + `submission.zip` | khi nộp bài      |
-
-Chỉ cần search trong notebook thì chạy 1–5 rồi dừng.
-
----
-
 ## Web
 
 ```bash
 cd web && bun install && bun run dev     # http://localhost:5173
 ```
 
-Nút trạng thái góc trên trái phải **xanh**. Còn đỏ thì backend chưa chạy -
-bấm vào nó để đổi Backend URL nếu đang dùng quick tunnel.
-
 ---
 
-## ⚠️ Chia việc: state KHÔNG dùng chung
+## Nộp bài
+Các thành viên sử dụng nút chia sẻ, và nộp lên phần subdomain tương ứng của mình, nhóm trưởng gom kết quả về, kiểm tra và nộp
 
-Kết quả lọc tay sống trong **localStorage của trình duyệt**, không nằm trên Kaggle.
-
-- ✅ Session Kaggle chết → không mất công sức lọc
-- ❌ **Hai người lọc trên hai máy KHÔNG thấy việc của nhau**
-
-Cách an toàn cho vòng thi 3 tiếng: **mỗi người phụ trách một nhóm query riêng**, cuối
-cùng gộp file. Dùng nút **Lưu workspace** / **Nạp** để trao đổi file JSON.
-
-Muốn sửa chung theo thời gian thực thì cần backend có trạng thái dùng chung - thứ mà
-kiến trúc 0đ này cố tình không có.
-
----
-
-## Luật nộp bài dễ quên nhất
-
-**Mỗi gói chỉ được nộp 3 lần, và tính LẦN CUỐI CÙNG - không phải lần tốt nhất.**
-
-Nộp thêm một bản tệ hơn là **ghi đè** bản tốt. Nộp sai định dạng vẫn tính 1 lần.
-Cân nhắc kỹ trước mỗi lần bấm nộp.
+> [!WARING]
+> Dự án không có license, nếu bạn clone về thì tự quản lí, mình không chịu trách nhiệm nào và cũng sẽ không giải đáp bất cứ thấc mắc nào  
+> Key và domain trong dự án này sẽ xoá sau khi kết thúc nên sẽ không còn dùng được, bạn hãy tự sửa lại code để phù hợp hơn với mục đích sử dụng của mình
