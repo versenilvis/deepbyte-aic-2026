@@ -19,7 +19,7 @@
 
 # Huớng dẫn
 
-1. **Tải file [AIC_2026_optimized.ipynb](kaggle/AIC_2026_optimized.ipynb), xong mở [Kaggle](https://www.kaggle.com/)**
+1. **Tải file [AIC_2026.ipynb](kaggle/AIC_2026.ipynb), xong mở [Kaggle](https://www.kaggle.com/)**
 
     - Tạo Notebook
     - Nhấn `File`
