@@ -1,5 +1,5 @@
-<img src="https://github.com/user-attachments/assets/044d4910-9013-47cf-995c-e0ace59bcd51" width="1080" alt="Login Screen" />
-<img src="https://github.com/user-attachments/assets/36e0ffa0-69d0-4bd2-b6b8-621c86729ae7" width="1080" alt="Home Screen" />
+<img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/9af28cca-658e-4df9-b2f8-70ece7439626" /><img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/c582e360-f2ab-4c09-9d28-16e68d3d7add" /><img src="https://github.com/user-attachments/assets/044d4910-9013-47cf-995c-e0ace59bcd51" width="1080" alt="Login Screen" />
+<img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/31c83213-3e32-4373-b456-358a3a391477" />
 
 <table>
   <tr>
@@ -7,10 +7,15 @@
       <img src="https://github.com/user-attachments/assets/429266ef-82cf-498b-8c96-8403e865d1d7" width="100%" alt="Home Screen 1" />
     </td>
     <td width="50%">
-      <img src="https://github.com/user-attachments/assets/a525e72f-a695-46f8-9b72-3638e1222c70" width="100%" alt="Login Screen" />
+      <img src="https://github.com/user-attachments/assets/69b595a6-c712-4c03-b2c8-4d1b320840b4" width="100%" alt="Login Screen" />
     </td>
   </tr>
 </table>
+
+# HCMAIC-2026
+- Tên hội thi: Hội thi Thử thách Trí tuệ Nhân tạo (AI Challenge) Thành phố Hồ Chí Minh năm 2026.
+- Team: Deepbyte
+- Bảng A
 
 # Huớng dẫn
 
